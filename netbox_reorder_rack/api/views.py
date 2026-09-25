@@ -50,25 +50,43 @@ class SaveViewSet(PermissionRequiredMixin, viewsets.ViewSet):
             changes_made = False  # Flag to track if any changes were made
 
             with transaction.atomic():
-                # Update devices in different categories
-                changes_made |= self._update_device_positions(
-                    request,
-                    rack,
-                    serializer.validated_data["front"],
-                    permission,
-                    "front",
+                # Two-phase save: a multi-device reorder can pass through transient
+                # overlaps (e.g. swapping two devices). Saving devices one by one with
+                # clean() would hit "U already occupied" against a device that has not
+                # moved yet and roll back the whole transaction. So:
+                #   1) collect every change and check permissions,
+                #   2) unrack every device that moves (vacate its old slot),
+                #   3) place each device at its new slot and validate with clean().
+                changes = []
+                changes += self._collect_changes(
+                    request, rack, serializer.validated_data["front"], permission
                 )
-                changes_made |= self._update_device_positions(
-                    request, rack, serializer.validated_data["rear"], permission, "rear"
+                changes += self._collect_changes(
+                    request, rack, serializer.validated_data["rear"], permission
                 )
-                changes_made |= self._update_device_positions(
+                changes += self._collect_changes(
                     request,
                     rack,
                     serializer.validated_data["other"],
                     permission,
-                    "other",
                     is_other=True,
                 )
+                changes_made = bool(changes)
+
+                # Phase 1: vacate old slots
+                for device, _position, _face in changes:
+                    device.position = None
+                    device.face = ""
+                    device.save()
+
+                # Phase 2: place at new slots (validated against final state)
+                for device, position, face in changes:
+                    if position is None:
+                        continue  # moved to "other" (unracked) - already done
+                    device.position = position
+                    device.face = face
+                    device.clean()
+                    device.save()
 
                 # If no changes were made, return 304 or a custom response
                 if not changes_made:
@@ -95,11 +113,14 @@ class SaveViewSet(PermissionRequiredMixin, viewsets.ViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def _update_device_positions(
-        self, request, rack, device_data_list, permission, device_type, is_other=False
+    def _collect_changes(
+        self, request, rack, device_data_list, permission, is_other=False
     ):
-        """Helper method to update device positions based on the category."""
-        changes_made = False  # Local flag to track if changes are made
+        """Return [(device, new_position, new_face)] for devices whose placement changes.
+
+        new_position is None for devices moved to "other" (unracked).
+        """
+        changes = []
 
         for device_data in device_data_list:
             device = rack.devices.filter(pk=device_data["id"]).first()
@@ -109,30 +130,18 @@ class SaveViewSet(PermissionRequiredMixin, viewsets.ViewSet):
 
             if is_other:
                 if device.position != device_data["y"]:
-                    device.position = None
-                    device.face = ""
                     self._check_permission(request, device, permission)
-
-                    # Save the device and mark changes as made
-                    device.clean()
-                    device.save()
-                    changes_made = True
-            # Update position and face for 'front' and 'rear' devices if changed
-            elif not is_other:
-                if current_device.face != device_data[
-                    "face"
-                ] or device.position != decimal.Decimal(device_data["y"]):
-                    device.position = decimal.Decimal(device_data["y"])
-                    device.face = device_data["face"]
-
+                    changes.append((device, None, ""))
+            else:
+                new_position = decimal.Decimal(device_data["y"])
+                if (
+                    current_device.face != device_data["face"]
+                    or device.position != new_position
+                ):
                     self._check_permission(request, device, permission)
+                    changes.append((device, new_position, device_data["face"]))
 
-                    # Save the device and mark changes as made
-                    device.clean()
-                    device.save()
-                    changes_made = True
-
-        return changes_made  # Return whether changes were made
+        return changes
 
     def _check_permission(self, request, device, permission):
         """Helper method to check if the user has permission for the device."""
