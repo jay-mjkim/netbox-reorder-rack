@@ -1,0 +1,80 @@
+{% load rack %}
+{% load perms %}
+{# One rack column of the row view: only the selected face is editable. A full-depth #}
+{# device mounted on the other face shows as a locked shadow so its units read as taken. #}
+<div class="d-flex justify-content-center">
+    <div class="rack_front d-flex">
+        <ul class="unit_numbers">
+            {% for unit in rack.units %}
+                {% if unit|rack_unit %}
+                    <li>{{ unit|rack_unit_to_int }}</li>
+                {% else %}
+                    <li></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+        <div class="grid-stack rack reorder-rack-grid"
+             id="grid-rack-{{ rack.id }}"
+             gs-column="2"
+             gs-max-row="{{ rack.u_height|mul:2 }}"
+             gs-min-row="{{ rack.u_height|mul:2 }}"
+             data-grid-kind="rack"
+             data-rack-id="{{ rack.id }}"
+             data-desc-units="{{ rack.desc_units|lower }}">
+            {% for device in units %}
+                {% if device.device %}
+                    {% if device.device.face == face %}
+                        <div class="grid-stack-item"
+                             gs-w="2"
+                             gs-h="{{ device.height|rack_unit_to_int|mul:2 }}"
+                             gs-x="0"
+                             gs-y="{{ device|calculate_u_position:rack }}"
+                             gs-id="{{ device.device.id }}"
+                             gs-locked="{% if not request.user|can_change:device.device %}true{% else %}{% endif %}"
+                             gs-no-move="{% if not request.user|can_change:device.device %}true{% else %}{% endif %}"
+                             data-item-color="{{ device.device.role.color }}"
+                             data-item-text-color="{% if device.device.role.color %}{{ device.device.role.color|text_color }}{% else %}000000{% endif %}"
+                             data-full-depth="{{ device.device.device_type.is_full_depth }}"
+                             data-item-face="{{ face }}"
+                             data-rack-id="{{ rack.id }}">
+                            {% if face == "front" %}
+                                {% with image=device.device.device_type.front_image %}
+                                    <div class="grid-stack-item-content"
+                                         style="{% if image and images %}background-image: url('{{ image.url }}'); background-size: {{ unit_width }}px;{% else %}background-color: #{{ device.device.role.color }};{% endif %} color: #{% if device.device.role.color %}{{ device.device.role.color|text_color }}{% else %}000000{% endif %}">
+                                        {% if labels or not image %}{{ device.device|device_name }}{% endif %}
+                                    </div>
+                                {% endwith %}
+                            {% else %}
+                                {% with image=device.device.device_type.rear_image %}
+                                    <div class="grid-stack-item-content"
+                                         style="{% if image and images %}background-image: url('{{ image.url }}'); background-size: {{ unit_width }}px;{% else %}background-color: #{{ device.device.role.color }};{% endif %} color: #{% if device.device.role.color %}{{ device.device.role.color|text_color }}{% else %}000000{% endif %}">
+                                        {% if labels or not image %}{{ device.device|device_name }}{% endif %}
+                                    </div>
+                                {% endwith %}
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="grid-stack-item"
+                             gs-w="2"
+                             gs-h="{{ device.height|rack_unit_to_int|mul:2 }}"
+                             gs-x="0"
+                             gs-y="{{ device|calculate_u_position:rack }}"
+                             gs-id="{{ device.device.id }}"
+                             gs-locked="true"
+                             gs-no-move="true"
+                             data-item-face="back"
+                             data-rack-id="{{ rack.id }}">
+                            <div class="grid-stack-item-content device_rear"
+                                 style="color: #000000"
+                                 title="Mounted on the {{ device.device.face }} face">
+                                {{ device.device|device_name }}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </div>
+        <ul class="indexes">
+        </ul>
+    </div>
+</div>

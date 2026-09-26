@@ -1,0 +1,120 @@
+{% extends "base/layout.html" %}
+{% load form_helpers %}
+{% load static %}
+{% load rack %}
+{% load i18n %}
+{% load perms %}
+{% block head %}
+    <link rel="stylesheet"
+          href="{% static 'netbox_reorder_rack/css/rack.css' %}">
+{% endblock head %}
+{% block title %}
+    {% trans "Reorder Racks" %}
+{% endblock title %}
+{% block content %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <form method="get" class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">{% render_field form.site_id %}</div>
+                        <div class="col-md-3">{% render_field form.location_id %}</div>
+                        <div class="col-md-4">{% render_field form.rack_id %}</div>
+                        <div class="col-md-2">{% render_field form.face %}</div>
+                    </div>
+                    <input type="hidden" name="view" value="{{ selected_view }}">
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="mdi mdi-view-column" aria-hidden="true"></i> {% trans "Show" %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% if error %}
+        <div class="alert alert-warning" role="alert">{{ error }}</div>
+    {% endif %}
+    {% if columns %}
+        <div class="row">
+            <div class="d-flex justify-content-between align-items-center btn-list mb-2">
+                <span class="text-muted">
+                    {% blocktrans with count=columns|length %}{{ count }} racks{% endblocktrans %} &middot; {{ face|capfirst }}
+                    <a class="ms-2" href="?{{ request.GET.urlencode }}&amp;face={{ other_face }}"
+                       id="face-toggle">{% blocktrans %}Show {{ other_face }}{% endblocktrans %}</a>
+                </span>
+                <span>
+                    <select class="btn btn-outline-secondary no-ts rack-view" id="view-selector">
+                        <option value="images-and-labels"
+                                {% if selected_view == "images-and-labels" %}selected{% endif %}>
+                            {% trans "Images and Labels" %}
+                        </option>
+                        <option value="images-only"
+                                {% if selected_view == "images-only" %}selected{% endif %}>
+                            {% trans "Images only" %}
+                        </option>
+                        <option value="labels-only"
+                                {% if selected_view == "labels-only" %}selected{% endif %}>
+                            {% trans "Labels only" %}
+                        </option>
+                    </select>
+                    <button class="btn btn-success" id="saveButton" disabled>{% trans "Save" %}</button>
+                </span>
+            </div>
+        </div>
+        <div class="reorder-row mt-2">
+            {% for column in columns %}
+                <div class="reorder-row-col text-center">
+                    <h5 class="text-nowrap">
+                        <a href="{{ column.rack.get_absolute_url }}">{{ column.rack }}</a>
+                    </h5>
+                    {% include "netbox_reorder_rack/inc/row_elevation.html" with rack=column.rack units=column.units %}
+                </div>
+            {% endfor %}
+            <div class="reorder-row-col text-center">
+                <h5 class="text-nowrap">{% trans "Non-Racked" %}</h5>
+                <div class="d-flex justify-content-center">
+                    <div class="grid-stack rack reorder-other"
+                         id="grid-other"
+                         gs-column="2"
+                         gs-max-row="150"
+                         gs-min-row="60"
+                         data-grid-kind="other">
+                        {% for device in non_racked %}
+                            <div class="grid-stack-item"
+                                 gs-w="2"
+                                 gs-h="{{ device.device_type.u_height|mul:2 }}"
+                                 gs-x="0"
+                                 gs-id="{{ device.id }}"
+                                 data-item-face="none"
+                                 data-rack-id="{{ device.rack_id }}"
+                                 data-item-color="{{ device.role.color }}"
+                                 data-item-text-color="{% if device.role.color %}{{ device.role.color|text_color }}{% else %}000000{% endif %}"
+                                 data-full-depth="{{ device.device_type.is_full_depth }}"
+                                 gs-locked="{% if not request.user|can_change:device %}true{% else %}{% endif %}"
+                                 gs-no-move="{% if not request.user|can_change:device %}true{% else %}{% endif %}">
+                                <div class="grid-stack-item-content"
+                                     style="{% if device.device_type.front_image and images %}background-image: url('{{ device.device_type.front_image.url }}');
+                                            background-size: {{ unit_width }}px;
+                                            {% else %}background-color: #{{ device.role.color }};
+                                            {% endif %} color: #{% if device.role.color %}{{ device.role.color|text_color }}{% else %}000000{% endif %}">
+                                    {% if labels or not device.device_type.front_image %}{{ device|device_name }}{% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock content %}
+{% block javascript %}
+    {% if columns %}
+        <script type="text/javascript">
+      const basePath = '{{ basepath }}';
+      const netbox_csrf_token = '{{ csrf_token }}';
+      const rowFace = '{{ face }}';
+        </script>
+        <script src="{% static 'netbox_reorder_rack/js/row.js' %}" defer></script>
+    {% endif %}
+{% endblock javascript %}

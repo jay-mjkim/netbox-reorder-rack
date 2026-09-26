@@ -55,3 +55,16 @@ ul.unit_numbers li {
     border: 1px dashed #8a8a8a;
     background-color: #f3f3f329;
 }
+
+/* Row view: rack columns side by side, page scrolls sideways past the viewport. */
+.reorder-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+}
+
+.reorder-row-col {
+    flex: 0 0 auto;
+}

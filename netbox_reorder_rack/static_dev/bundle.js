@@ -15,6 +15,7 @@ const noCache = ARGS.includes('--no-cache')
 async function bundleScripts() {
     const entryPoints = {
         rack: 'js/rack.js',
+        row: 'js/row.js',
     }
 
     try {
