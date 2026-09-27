@@ -37,13 +37,13 @@
                                      style="background-image: url('{{ device.device.device_type.front_image.url }}');
                                             background-size: {{ unit_width }}px;
                                             color: #{% if device.device.role.color %}{{ device.device.role.color|text_color }}{% else %}000000{% endif %}">
-                                    {% if labels %}{{ device.device | device_name }}{% endif %}
+                                    <a class="device-link" href="{{ device.device.get_absolute_url }}" title="{{ device.device|device_name }}">{% if labels %}{{ device.device|device_name }}{% else %}<i class="mdi mdi-open-in-new"></i>{% endif %}</a>
                                 </div>
                             {% else %}
                                 <div class="grid-stack-item-content"
                                      style="background-color: #{{ device.device.role.color }};
                                             color: #{% if device.device.role.color %}{{ device.device.role.color|text_color }}{% else %}000000{% endif %}">
-                                    {{ device.device | device_name }}
+                                    <a class="device-link" href="{{ device.device.get_absolute_url }}">{{ device.device|device_name }}</a>
                                 </div>
                             {% endif %}
                         </div>
@@ -66,10 +66,10 @@
                                      style="background-image: url('{{ device.device.device_type.rear_image.url }}');
                                             background-size: {{ unit_width }}px;
                                             color: #{% if device.device.role.color %}{{ device.device.role.color|text_color }}{% else %}000000{% endif %}">
-                                    {% if labels %}{{ device.device | device_name }}{% endif %}
+                                    <a class="device-link" href="{{ device.device.get_absolute_url }}" title="{{ device.device|device_name }}">{% if labels %}{{ device.device|device_name }}{% else %}<i class="mdi mdi-open-in-new"></i>{% endif %}</a>
                                 </div>
                             {% else %}
-                                <div class="grid-stack-item-content device_rear" style="color: #000000">{{ device.device.name }}</div>
+                                <div class="grid-stack-item-content device_rear" style="color: #000000"><a class="device-link" href="{{ device.device.get_absolute_url }}">{{ device.device.name }}</a></div>
                             {% endif %}
                         </div>
                     {% endif %}

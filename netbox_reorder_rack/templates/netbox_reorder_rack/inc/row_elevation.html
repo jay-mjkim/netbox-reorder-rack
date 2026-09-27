@@ -41,14 +41,18 @@
                                 {% with image=device.device.device_type.front_image %}
                                     <div class="grid-stack-item-content"
                                          style="{% if image and images %}background-image: url('{{ image.url }}'); background-size: {{ unit_width }}px;{% else %}background-color: #{{ device.device.role.color }};{% endif %} color: #{% if device.device.role.color %}{{ device.device.role.color|text_color }}{% else %}000000{% endif %}">
-                                        {% if labels or not image %}{{ device.device|device_name }}{% endif %}
+                                        <a class="device-link" href="{{ device.device.get_absolute_url }}" title="{{ device.device|device_name }}">
+                                            {% if labels or not image %}{{ device.device|device_name }}{% else %}<i class="mdi mdi-open-in-new"></i>{% endif %}
+                                        </a>
                                     </div>
                                 {% endwith %}
                             {% else %}
                                 {% with image=device.device.device_type.rear_image %}
                                     <div class="grid-stack-item-content"
                                          style="{% if image and images %}background-image: url('{{ image.url }}'); background-size: {{ unit_width }}px;{% else %}background-color: #{{ device.device.role.color }};{% endif %} color: #{% if device.device.role.color %}{{ device.device.role.color|text_color }}{% else %}000000{% endif %}">
-                                        {% if labels or not image %}{{ device.device|device_name }}{% endif %}
+                                        <a class="device-link" href="{{ device.device.get_absolute_url }}" title="{{ device.device|device_name }}">
+                                            {% if labels or not image %}{{ device.device|device_name }}{% else %}<i class="mdi mdi-open-in-new"></i>{% endif %}
+                                        </a>
                                     </div>
                                 {% endwith %}
                             {% endif %}
@@ -67,7 +71,7 @@
                             <div class="grid-stack-item-content device_rear"
                                  style="color: #000000"
                                  title="Mounted on the {{ device.device.face }} face">
-                                {{ device.device|device_name }}
+                                <a class="device-link" href="{{ device.device.get_absolute_url }}">{{ device.device|device_name }}</a>
                             </div>
                         </div>
                     {% endif %}

@@ -47,6 +47,8 @@ function initializeGrid(element, acceptWidgets) {
     animate: true,
     removeTimeout: 100,
     disableResize: true,
+    // A click on the device link navigates instead of starting a drag.
+    draggable: { handle: '.grid-stack-item-content', cancel: '.device-link' },
     acceptWidgets: acceptWidgets,
   }, element);
 }

@@ -21,6 +21,8 @@ function initializeGrid(element) {
     animate: true,
     removeTimeout: 100,
     disableResize: true,
+    // A click on the device link navigates instead of starting a drag.
+    draggable: { handle: '.grid-stack-item-content', cancel: '.device-link' },
     // Shadows of devices on the other face are locked in place; anything else may
     // land in any rack. Whether a full-depth device actually fits is the server's
     // call (Device.clean), same as the per-rack view.

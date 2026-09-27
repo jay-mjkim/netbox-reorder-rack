@@ -68,3 +68,13 @@ ul.unit_numbers li {
 .reorder-row-col {
     flex: 0 0 auto;
 }
+
+/* Device name inside a grid item doubles as the link to the device. */
+.grid-stack-item-content .device-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.grid-stack-item-content .device-link:hover {
+    text-decoration: underline;
+}
