@@ -175,7 +175,7 @@ function refreshStats() {
   var statsEl = document.querySelector('.rack-stats');
   if (statsEl) renderStats(statsEl, [frontGrid.el, rearGrid.el]);
 }
-initLaneToggles(document.getElementById('reorder-rack'));
+initLaneToggles(document.getElementById('reorder-rack'), refreshStats);
 refreshStats();
 
 // Attach change event listener to each grid

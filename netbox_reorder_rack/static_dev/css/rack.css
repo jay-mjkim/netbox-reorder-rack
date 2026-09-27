@@ -104,39 +104,65 @@ ul.unit_numbers li {
     text-decoration: none;
 }
 
-/* Column captions over the elevation: U | face | lanes. Widths match the columns below. */
-.reorder-captions {
+/* The elevation is a row of columns; every column is a caption over its content, so the
+   captions line up with the columns by construction. */
+.reorder-elevation {
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
+    margin: 0 auto;            /* centred in the card when the lanes are hidden */
+    width: max-content;
+}
+
+.reorder-col {
+    flex: 0 0 auto;
+}
+
+.reorder-col .cap {
     height: 1.4rem;
     margin-bottom: 2px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
     font-size: 0.7rem;
     color: var(--tblr-secondary);
     white-space: nowrap;
 }
 
-.reorder-captions .cap-units { width: 20px; }
-.reorder-captions .cap-grid  { width: 217px; text-align: center; }
-.reorder-captions .cap-lane  { width: 56px; text-align: right; padding-right: 6px; box-sizing: border-box; }
-.reorder-captions .cap-grid + .cap-lane { margin-left: 4px; }
+.reorder-col-units .unit_numbers {
+    float: none;
+    margin: 0;
+    padding: 0;
+}
+
+.reorder-col-grid .rack {
+    float: none;
+}
+
+.lane-col {
+    width: 56px;
+}
+
+.lane-col .cap {
+    justify-content: flex-end;
+    padding-right: 6px;
+    box-sizing: border-box;
+}
+
+.reorder-col-grid + .lane-col {
+    margin-left: 4px;
+}
 
 /* One lane: a column of cells aligned to the devices in the grid beside it. */
 .lane {
     position: relative;
     width: 56px;
-    flex: 0 0 auto;
-    margin-left: 0;
     background: var(--tblr-bg-surface-secondary);
     border-radius: 3px;
     box-sizing: border-box;
 }
 
-.lane + .lane {
+.lane-col + .lane-col .lane {
     border-left: 1px solid var(--tblr-border-color);
-}
-
-.grid-stack + .lane {
-    margin-left: 4px;
 }
 
 .lane-cell {
@@ -160,10 +186,10 @@ ul.unit_numbers li {
     font-style: italic;
 }
 
-/* Lane toggles hide the lane, its caption and the matching footer stat. */
-.hide-lane-weight .lane-weight,
-.hide-lane-rated  .lane-rated,
-.hide-lane-peak   .lane-peak { display: none; }
+/* A lane toggle hides the lane, its caption and the matching footer stat together. */
+.hide-lane-weight .lane-weight, .hide-lane-weight .stat-weight,
+.hide-lane-rated  .lane-rated,  .hide-lane-rated  .stat-rated,
+.hide-lane-peak   .lane-peak,   .hide-lane-peak   .stat-peak { display: none; }
 
 /* Totals under the elevation. */
 .rack-stats {
@@ -182,6 +208,10 @@ ul.unit_numbers li {
 
 .rack-stats .stat + .stat {
     border-left: 1px solid var(--tblr-border-color);
+}
+
+.rack-stats .progress {
+    height: 3px;
 }
 
 .rack-stats .stat-label {

@@ -89,7 +89,7 @@
                             <br><small class="text-muted">{{ object.role }}</small>
                         {% endif %}
                     </div>
-                    <div class="card-body p-2 d-flex gap-4">
+                    <div class="card-body p-2 d-flex justify-content-center gap-4">
                         {% include "netbox_reorder_rack/inc/elevation.html" with rack=object units=front_units face="front" %}
                         {% include "netbox_reorder_rack/inc/elevation.html" with rack=object units=rear_units face="rear" %}
                     </div>

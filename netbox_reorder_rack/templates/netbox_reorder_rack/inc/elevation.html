@@ -1,20 +1,14 @@
 {% load rack %}
 {% load i18n %}
-{# One face of one rack: unit numbers, the draggable grid, and the capacity lanes beside #}
-{# it (weight / PSU rating / measured peak), one cell per device, aligned to the device. #}
-{# The lanes are drawn by JS from the grid items so they follow a drag. Params: rack, #}
-{# units, face, images, labels, unit_width, peak_available. #}
+{# One face of one rack as a row of columns, each column a caption over its content: #}
+{# unit numbers, the draggable grid, then the capacity lanes (weight / PSU rating / #}
+{# measured peak) with one cell per device aligned to the device. Captions live inside #}
+{# their column so they line up whatever the column widths are. The lane cells are drawn #}
+{# by JS from the grid items so they follow a drag. Params: rack, units, face, images, #}
+{# labels, unit_width, peak_available. #}
 <div class="reorder-elevation" data-rack-id="{{ rack.id }}" data-face="{{ face }}">
-    <div class="reorder-captions">
-        <span class="cap cap-units">U</span>
-        <span class="cap cap-grid">{{ face|capfirst }}</span>
-        <span class="cap cap-lane lane-weight" title="{% trans 'Device weight' %}">kg</span>
-        <span class="cap cap-lane lane-rated" title="{% trans 'PSU rating; a redundant pair counts as one PSU' %}">W {% trans "rated" %}</span>
-        {% if peak_available %}
-            <span class="cap cap-lane lane-peak" title="{% trans 'Measured peak draw' %}">W peak</span>
-        {% endif %}
-    </div>
-    <div class="rack_front d-flex">
+    <div class="reorder-col reorder-col-units">
+        <div class="cap">U</div>
         <ul class="unit_numbers">
             {% for unit in rack.units %}
                 {% if unit|rack_unit %}
@@ -24,6 +18,9 @@
                 {% endif %}
             {% endfor %}
         </ul>
+    </div>
+    <div class="reorder-col reorder-col-grid">
+        <div class="cap">{{ face|capfirst }}</div>
         <div class="grid-stack rack reorder-rack-grid"
              id="grid-{{ face }}-{{ rack.id }}"
              gs-column="2"
@@ -48,10 +45,19 @@
                 {% endif %}
             {% endfor %}
         </div>
-        <div class="lane lane-weight" data-lane="weight" aria-hidden="true"></div>
-        <div class="lane lane-rated" data-lane="rated" aria-hidden="true"></div>
-        {% if peak_available %}
-            <div class="lane lane-peak" data-lane="peak" aria-hidden="true"></div>
-        {% endif %}
     </div>
+    <div class="reorder-col lane-col lane-weight">
+        <div class="cap" title="{% trans 'Device weight' %}">kg</div>
+        <div class="lane" data-lane="weight" aria-hidden="true"></div>
+    </div>
+    <div class="reorder-col lane-col lane-rated">
+        <div class="cap" title="{% trans 'PSU rating; a redundant pair counts as one PSU' %}">W {% trans "rated" %}</div>
+        <div class="lane" data-lane="rated" aria-hidden="true"></div>
+    </div>
+    {% if peak_available %}
+        <div class="reorder-col lane-col lane-peak">
+            <div class="cap" title="{% trans 'Measured peak draw' %}">W peak</div>
+            <div class="lane" data-lane="peak" aria-hidden="true"></div>
+        </div>
+    {% endif %}
 </div>

@@ -118,10 +118,14 @@ export function renderStats(statsEl, gridEls) {
     }
   }
 
-  // The card as a whole: red border and a badge naming what is over.
+  // The card as a whole: red border and a badge naming what is over. Lanes the user
+  // has hidden are left out, so the badge only ever names something on screen.
   var card = statsEl.closest('.reorder-rack-card');
   if (card) {
-    var over = levels.filter(function (l) { return l[1] === 'over'; }).map(function (l) { return l[0]; });
+    var root = card.closest('.reorder-row') || document.body;
+    var over = levels.filter(function (l) {
+      return l[1] === 'over' && !root.classList.contains('hide-lane-' + l[0]);
+    }).map(function (l) { return l[0]; });
     card.classList.toggle('over-limit', over.length > 0);
     var badge = card.querySelector('.rack-over-badge');
     if (badge) {
@@ -132,7 +136,7 @@ export function renderStats(statsEl, gridEls) {
 }
 
 // Lane visibility toggles, remembered per browser.
-export function initLaneToggles(rootEl) {
+export function initLaneToggles(rootEl, onChange) {
   var saved = {};
   try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch (e) { saved = {}; }
   var inputs = document.querySelectorAll('.lane-toggles input[data-lane]');
@@ -144,6 +148,7 @@ export function initLaneToggles(rootEl) {
       rootEl.classList.toggle('hide-lane-' + lane, !input.checked);
     });
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* private mode */ }
+    if (onChange) onChange();
   }
   inputs.forEach(function (input) {
     var lane = input.getAttribute('data-lane');

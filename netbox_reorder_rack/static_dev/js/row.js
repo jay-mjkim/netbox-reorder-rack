@@ -106,7 +106,7 @@ function refreshStats() {
     if (grid) renderStats(statsEl, [grid]);
   });
 }
-initLaneToggles(document.getElementById('reorder-row'));
+initLaneToggles(document.getElementById('reorder-row'), refreshStats);
 refreshStats();
 
 grids.forEach(function (grid) {
