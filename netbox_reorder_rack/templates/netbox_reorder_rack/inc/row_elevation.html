@@ -1,5 +1,6 @@
 {% load rack %}
 {% load perms %}
+{% load humanize %}
 {# One rack column of the row view: only the selected face is editable. A full-depth #}
 {# device mounted on the other face shows as a locked shadow so its units read as taken. #}
 <div class="d-flex justify-content-center">
@@ -36,7 +37,10 @@
                              data-item-text-color="{% if device.device.role.color %}{{ device.device.role.color|text_color }}{% else %}000000{% endif %}"
                              data-full-depth="{{ device.device.device_type.is_full_depth }}"
                              data-item-face="{{ face }}"
-                             data-rack-id="{{ rack.id }}">
+                             data-rack-id="{{ rack.id }}" data-weight="{{ device.meta.weight_kg|default_if_none:'' }}"
+                             data-rated="{{ device.meta.rated_w|default_if_none:'' }}"
+                             data-peak="{{ device.meta.peak_w|default_if_none:'' }}"
+                             title="{{ device.device|device_name }}&#10;PSU: {{ device.meta.psu_label|default:'-' }}&#10;peak: {% if device.meta.peak_w %}{{ device.meta.peak_w|intcomma }} W{% else %}미측정{% endif %}&#10;무게: {% if device.meta.weight_kg %}{{ device.meta.weight_kg }} kg{% else %}-{% endif %}">
                             {% if face == "front" %}
                                 {% with image=device.device.device_type.front_image %}
                                     {% if image and images %}
@@ -49,6 +53,7 @@
                                         <a class="device-link" href="{{ device.device.get_absolute_url }}" title="{{ device.device|device_name }}">
                                             {% if labels or not image %}{{ device.device|device_name }}{% else %}<i class="mdi mdi-open-in-new"></i>{% endif %}
                                         </a>
+                                        {% if device.height >= 2 and labels %}<span class="item-meta">{% if device.meta.weight_kg %}{{ device.meta.weight_kg }}kg{% endif %}{% if device.meta.rated_w %} · {{ device.meta.psu_label }}{% endif %} · {% if device.meta.peak_w %}{{ device.meta.peak_w|intcomma }}W{% else %}<span class="unmeasured">미측정</span>{% endif %}</span>{% endif %}
                                     </div>
                                 {% endwith %}
                             {% else %}
@@ -63,6 +68,7 @@
                                         <a class="device-link" href="{{ device.device.get_absolute_url }}" title="{{ device.device|device_name }}">
                                             {% if labels or not image %}{{ device.device|device_name }}{% else %}<i class="mdi mdi-open-in-new"></i>{% endif %}
                                         </a>
+                                        {% if device.height >= 2 and labels %}<span class="item-meta">{% if device.meta.weight_kg %}{{ device.meta.weight_kg }}kg{% endif %}{% if device.meta.rated_w %} · {{ device.meta.psu_label }}{% endif %} · {% if device.meta.peak_w %}{{ device.meta.peak_w|intcomma }}W{% else %}<span class="unmeasured">미측정</span>{% endif %}</span>{% endif %}
                                     </div>
                                 {% endwith %}
                             {% endif %}
@@ -77,7 +83,10 @@
                              gs-locked="true"
                              gs-no-move="true"
                              data-item-face="back"
-                             data-rack-id="{{ rack.id }}">
+                             data-rack-id="{{ rack.id }}" data-weight="{{ device.meta.weight_kg|default_if_none:'' }}"
+                             data-rated="{{ device.meta.rated_w|default_if_none:'' }}"
+                             data-peak="{{ device.meta.peak_w|default_if_none:'' }}"
+                             title="{{ device.device|device_name }}&#10;PSU: {{ device.meta.psu_label|default:'-' }}&#10;peak: {% if device.meta.peak_w %}{{ device.meta.peak_w|intcomma }} W{% else %}미측정{% endif %}&#10;무게: {% if device.meta.weight_kg %}{{ device.meta.weight_kg }} kg{% else %}-{% endif %}">
                             <div class="grid-stack-item-content device_rear"
                                  style="color: #000000"
                                  title="Mounted on the {{ device.device.face }} face">

@@ -88,3 +88,37 @@ ul.unit_numbers li {
         -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000,
         0 0 3px #000, 0 0 3px #000;
 }
+
+/* Per-item power/weight line (only rendered on items 2U and taller). */
+.grid-stack-item-content .item-meta {
+    display: block;
+    font-size: 0.68em;
+    font-weight: 400;
+    line-height: 1.2;
+    opacity: 0.9;
+}
+
+.grid-stack-item-content .unmeasured {
+    font-style: italic;
+}
+
+/* Rack totals above each elevation; filled and recoloured by JS while dragging. */
+.rack-stats {
+    font-size: 0.78em;
+    line-height: 1.35;
+    margin-bottom: 0.4rem;
+    color: var(--tblr-secondary, #6c757d);
+}
+
+.rack-stats .stat .val {
+    font-weight: 600;
+    color: var(--tblr-body-color, inherit);
+}
+
+.rack-stats .stat.warn .val {
+    color: var(--tblr-warning, #f59f00);
+}
+
+.rack-stats .stat.over .val {
+    color: var(--tblr-danger, #d63939);
+}

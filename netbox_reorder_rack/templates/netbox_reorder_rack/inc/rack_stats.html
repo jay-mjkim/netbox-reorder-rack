@@ -1,0 +1,18 @@
+{% load humanize %}
+{# Live power/weight totals for one rack. Server renders the limits; row.js/rack.js fill the sums and #}
+{# refresh them on every drag, so the numbers follow what is on screen, not what is saved. #}
+<div class="rack-stats"
+     id="rack-stats-{{ rack.id }}"
+     data-rack-id="{{ rack.id }}"
+     data-capacity="{{ capacity.capacity_w|default_if_none:'' }}"
+     data-max-weight="{{ capacity.max_weight_kg|default_if_none:'' }}">
+    <div class="stat stat-rated" title="PSU 정격 합(1+1 이중화는 PSU 1개 기준) / 랙 전력 용량(피드 × 운영 상한)">
+        정격 <span class="val"></span>{% if capacity.capacity_w %} / {{ capacity.capacity_w|intcomma }}W{% endif %}
+    </div>
+    <div class="stat stat-peak" title="실측 peak 합 / 랙 전력 용량. 미측정 장비는 합에서 빠지고 대수로 표시">
+        peak <span class="val"></span>{% if capacity.capacity_w %} / {{ capacity.capacity_w|intcomma }}W{% endif %}
+    </div>
+    <div class="stat stat-weight" title="장비 무게 합 / 랙 허용 하중">
+        무게 <span class="val"></span>{% if capacity.max_weight_kg %} / {{ capacity.max_weight_kg }}kg{% endif %}
+    </div>
+</div>

@@ -11,6 +11,28 @@ from django.views.generic import View
 from netbox.config import get_config
 from utilities.views import register_model_view
 
+from netbox_reorder_rack.capacity import device_meta_map
+from netbox_reorder_rack.capacity import rack_capacity
+
+
+def _attach_meta(units_lists, extra_devices=()):
+    """Compute power/weight meta once for every device on the page and hang it on
+    each unit dict (``unit["meta"]``) and on the loose devices (``device.meta``)."""
+    devices = {}
+    for units in units_lists:
+        for unit in units:
+            if unit.get("device"):
+                devices[unit["device"].pk] = unit["device"]
+    for device in extra_devices:
+        devices[device.pk] = device
+    meta = device_meta_map(devices.values())
+    for units in units_lists:
+        for unit in units:
+            if unit.get("device"):
+                unit["meta"] = meta[unit["device"].pk]
+    for device in extra_devices:
+        device.meta = meta[device.pk]
+
 
 @register_model_view(
     Rack,
@@ -51,7 +73,10 @@ class ReorderView(LoginRequiredMixin, PermissionRequiredMixin, View):
             if device_type.subdevice_role == "child":
                 exclude_list.append(device.id)
 
-        non_racked_devices = non_racked.exclude(pk__in=exclude_list)
+        non_racked_devices = list(non_racked.exclude(pk__in=exclude_list))
+        front_units = rack.get_rack_units(expand_devices=False, face="front")
+        rear_units = rack.get_rack_units(expand_devices=False, face="rear")
+        _attach_meta([front_units, rear_units], non_racked_devices)
         config = get_config()
 
         base_url = f"{request.scheme}://{request.get_host().rstrip('/')}"
@@ -65,9 +90,10 @@ class ReorderView(LoginRequiredMixin, PermissionRequiredMixin, View):
                 "labels": labels,
                 "unit_width": config.RACK_ELEVATION_DEFAULT_UNIT_WIDTH,
                 "base_url": base_url,
-                "front_units": rack.get_rack_units(expand_devices=False, face="front"),
-                "rear_units": rack.get_rack_units(expand_devices=False, face="rear"),
+                "front_units": front_units,
+                "rear_units": rear_units,
                 "non_racked": non_racked_devices,
+                "capacity": rack_capacity(rack),
                 "basepath": settings.BASE_PATH,
             },
         )
@@ -105,8 +131,10 @@ class ReorderRowView(LoginRequiredMixin, PermissionRequiredMixin, View):
         images = selected_view != "labels-only"
         labels = selected_view != "images-only"
 
-        racks = Rack.objects.restrict(request.user, "view").select_related(
-            "site", "location"
+        racks = (
+            Rack.objects.restrict(request.user, "view")
+            .select_related("site", "location")
+            .prefetch_related("powerfeeds")
         )
         # The rack list passes its own filter through (id=); our form uses rack_id=.
         rack_ids = params.getlist("rack_id") or params.getlist("id")
@@ -132,6 +160,7 @@ class ReorderRowView(LoginRequiredMixin, PermissionRequiredMixin, View):
             {
                 "rack": rack,
                 "units": rack.get_rack_units(expand_devices=False, face=face),
+                "capacity": rack_capacity(rack),
             }
             for rack in racks
         ]
@@ -149,6 +178,8 @@ class ReorderRowView(LoginRequiredMixin, PermissionRequiredMixin, View):
             # which get_rack_units adds for mounted devices but nothing adds here.
             .annotate(devicebay_count=Count("devicebays"))
         )
+        non_racked = list(non_racked)
+        _attach_meta([c["units"] for c in columns], non_racked)
 
         config = get_config()
 

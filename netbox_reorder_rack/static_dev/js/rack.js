@@ -1,6 +1,7 @@
 // Variable to track whether changes have been made
 import { GridStack } from 'gridstack';
 import { createToast } from './toast';
+import { renderStats } from './stats';
 
 var changesMade = false;
 var gridItemsMap = [];
@@ -167,11 +168,18 @@ grids = [frontGrid, rearGrid, nonRackedGrid];
 // Get the items from the grids
 getItems(grids);
 
+function refreshStats() {
+  var statsEl = document.querySelector('.rack-stats');
+  if (statsEl) renderStats(statsEl, [frontGrid.el, rearGrid.el]);
+}
+refreshStats();
+
 // Attach change event listener to each grid
 grids.forEach(function (grid, gridIndex) {
   grid.on('change', function (event, items) {
     // Set changesMade to true when a change occurs
     changesMade = true;
+    refreshStats();
 
     // Select the button element by its ID or any other selector
     var button = document.getElementById('saveButton');
@@ -198,6 +206,7 @@ grids.forEach(function (grid, gridIndex) {
   grid.on('dropped', function (event, previousWidget, newWidget) {
     // Set changesMade to true when a change occurs
     changesMade = true;
+    setTimeout(refreshStats, 0);
 
     // Select the button element by its ID or any other selector
     var button = document.getElementById('saveButton');

@@ -4,6 +4,7 @@
 {% load rack %}
 {% load i18n %}
 {% load perms %}
+{% load humanize %}
 {% block head %}
     <link rel="stylesheet"
           href="{% static 'netbox_reorder_rack/css/rack.css' %}">
@@ -65,9 +66,10 @@
         <div class="reorder-row mt-2">
             {% for column in columns %}
                 <div class="reorder-row-col text-center">
-                    <div class="text-nowrap mb-2">
+                    <div class="text-nowrap mb-1">
                         <strong><a href="{{ column.rack.get_absolute_url }}">{{ column.rack.name }}</a></strong>
                     </div>
+                    {% include "netbox_reorder_rack/inc/rack_stats.html" with rack=column.rack capacity=column.capacity %}
                     {% include "netbox_reorder_rack/inc/row_elevation.html" with rack=column.rack units=column.units %}
                 </div>
             {% endfor %}
@@ -87,7 +89,10 @@
                                  gs-x="0"
                                  gs-id="{{ device.id }}"
                                  data-item-face="none"
-                                 data-rack-id="{{ device.rack_id }}"
+                                 data-rack-id="{{ device.rack_id }}" data-weight="{{ device.meta.weight_kg|default_if_none:'' }}"
+                             data-rated="{{ device.meta.rated_w|default_if_none:'' }}"
+                             data-peak="{{ device.meta.peak_w|default_if_none:'' }}"
+                             title="{{ device|device_name }}&#10;PSU: {{ device.meta.psu_label|default:'-' }}&#10;peak: {% if device.meta.peak_w %}{{ device.meta.peak_w|intcomma }} W{% else %}미측정{% endif %}&#10;무게: {% if device.meta.weight_kg %}{{ device.meta.weight_kg }} kg{% else %}-{% endif %}"
                                  data-item-color="{{ device.role.color }}"
                                  data-item-text-color="{% if device.role.color %}{{ device.role.color|text_color }}{% else %}000000{% endif %}"
                                  data-full-depth="{{ device.device_type.is_full_depth }}"

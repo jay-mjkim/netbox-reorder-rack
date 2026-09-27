@@ -202,3 +202,80 @@ class ReorderRowAPITest(RowTestMixin, TestCase):
         self.assertHttpStatus(resp, 403)
         a.refresh_from_db()
         self.assertEqual(a.rack, self.rack1)
+
+
+class CapacityTest(RowTestMixin, TestCase):
+    """Power/weight figures on the grids come straight from NetBox's own model."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        from dcim.models import PowerFeed
+        from dcim.models import PowerPanel
+        from dcim.models import PowerPort
+        from extras.models import CustomField
+        from core.models import ObjectType as OT
+
+        cls.two_u.weight = 38.8
+        cls.two_u.weight_unit = "kg"
+        cls.two_u.save()
+        b = Device.objects.get(name="B")
+        PowerPort.objects.create(device=b, name="PSU1", maximum_draw=1800)
+        PowerPort.objects.create(device=b, name="PSU2", maximum_draw=1800)
+        cf = CustomField.objects.create(name="measured_peak_power_w", type="integer")
+        cf.object_types.set([OT.objects.get_for_model(Device)])
+        b.custom_field_data["measured_peak_power_w"] = 1352
+        b.save()
+        cls.rack1.max_weight = 1000
+        cls.rack1.weight_unit = "kg"
+        cls.rack1.save()
+        panel = PowerPanel.objects.create(site=cls.site, name="P1")
+        PowerFeed.objects.create(
+            power_panel=panel,
+            rack=cls.rack1,
+            name="R1-A",
+            voltage=220,
+            amperage=15,
+            phase="single-phase",
+            max_utilization=80,
+        )
+
+    def test_meta_helpers(self):
+        from netbox_reorder_rack.capacity import device_meta_map
+        from netbox_reorder_rack.capacity import rack_capacity
+
+        a = Device.objects.get(name="A")
+        b = Device.objects.get(name="B")
+        meta = device_meta_map([a, b])
+        self.assertEqual(meta[b.pk]["psu_label"], "2×1,800W (1+1)")
+        self.assertEqual(meta[b.pk]["rated_w"], 1800)  # redundant pair counts once
+        self.assertEqual(meta[b.pk]["peak_w"], 1352)
+        self.assertEqual(meta[b.pk]["weight_kg"], 38.8)
+        self.assertEqual(meta[a.pk]["rated_w"], None)
+        self.assertEqual(meta[a.pk]["peak_w"], None)  # unmeasured, not zero
+        cap = rack_capacity(self.rack1)
+        self.assertEqual(cap["capacity_w"], 2640)  # 220V x 15A x 80%
+        self.assertEqual(cap["max_weight_kg"], 1000)
+
+    def test_row_page_carries_figures(self):
+        self.grant("view", "change")
+        response = self.client.get(f"/plugins/reorder/row/?rack_id={self.rack1.pk}")
+        self.assertHttpStatus(response, 200)
+        content = response.content.decode()
+        self.assertIn('data-rated="1800"', content)
+        self.assertIn('data-peak="1352"', content)
+        self.assertIn('data-weight="38.8"', content)
+        self.assertIn('data-capacity="2640"', content)
+        self.assertIn('data-max-weight="1000"', content)
+        self.assertIn("2×1,800W (1+1)", content)
+        # A has no ports/peak: attributes are present but empty, and the 1U item
+        # gets no meta line (only the tooltip).
+        self.assertIn('data-rated=""', content)
+
+    def test_rack_page_carries_figures(self):
+        self.grant("view", "change")
+        response = self.client.get(f"/dcim/racks/{self.rack1.pk}/reorder/")
+        self.assertHttpStatus(response, 200)
+        content = response.content.decode()
+        self.assertIn('data-capacity="2640"', content)
+        self.assertIn('data-peak="1352"', content)

@@ -5,6 +5,7 @@
 {% load rack %}
 {% load i18n %}
 {% load perms %}
+{% load humanize %}
 {% block head %}
     <link rel="stylesheet"
           href="{% static 'netbox_reorder_rack/css/rack.css' %}">
@@ -79,6 +80,11 @@
                 </div>
             </div>
             <div class="container mt-2">
+                <div class="row mb-2">
+                    <div class="col-12 text-center">
+                        {% include "netbox_reorder_rack/inc/rack_stats.html" with rack=object capacity=capacity %}
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12 text-center">
                         <h4>Front</h4>
@@ -104,7 +110,10 @@
                                          gs-x="0"
                                          gs-id="{{ device.id }}"
                                          gs-locked="false"
-                                         data-item-face="none"
+                                         data-item-face="none" data-weight="{{ device.meta.weight_kg|default_if_none:'' }}"
+                             data-rated="{{ device.meta.rated_w|default_if_none:'' }}"
+                             data-peak="{{ device.meta.peak_w|default_if_none:'' }}"
+                             title="{{ device|device_name }}&#10;PSU: {{ device.meta.psu_label|default:'-' }}&#10;peak: {% if device.meta.peak_w %}{{ device.meta.peak_w|intcomma }} W{% else %}미측정{% endif %}&#10;무게: {% if device.meta.weight_kg %}{{ device.meta.weight_kg }} kg{% else %}-{% endif %}"
                                          data-item-color="{{ device.role.color }}"
                                          data-item-text-color="{% if device.role.color %}{{ device.role.color|text_color }}{% else %}000000{% endif %}"
                                          data-full-depth="{{ device.device_type.is_full_depth }}"
