@@ -12,6 +12,7 @@ from netbox.config import get_config
 from utilities.views import register_model_view
 
 from netbox_reorder_rack.capacity import device_meta_map
+from netbox_reorder_rack.capacity import peak_available
 from netbox_reorder_rack.capacity import rack_capacity
 
 
@@ -94,6 +95,7 @@ class ReorderView(LoginRequiredMixin, PermissionRequiredMixin, View):
                 "rear_units": rear_units,
                 "non_racked": non_racked_devices,
                 "capacity": rack_capacity(rack),
+                "peak_available": peak_available(),
                 "basepath": settings.BASE_PATH,
             },
         )
@@ -201,6 +203,7 @@ class ReorderRowView(LoginRequiredMixin, PermissionRequiredMixin, View):
                 "labels": labels,
                 "selected_view": selected_view,
                 "unit_width": config.RACK_ELEVATION_DEFAULT_UNIT_WIDTH,
+                "peak_available": peak_available(),
                 "basepath": settings.BASE_PATH,
             },
         )

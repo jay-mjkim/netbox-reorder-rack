@@ -1,18 +1,32 @@
 {% load humanize %}
-{# Live power/weight totals for one rack. Server renders the limits; row.js/rack.js fill the sums and #}
-{# refresh them on every drag, so the numbers follow what is on screen, not what is saved. #}
+{% load i18n %}
+{# Totals for one rack against its limits. The server renders the limits; JS fills the #}
+{# sums, the bars and the "over by" line from the items on screen, and refreshes them on #}
+{# every drag. Params: rack, capacity (from capacity.rack_capacity), peak_available. #}
 <div class="rack-stats"
      id="rack-stats-{{ rack.id }}"
      data-rack-id="{{ rack.id }}"
      data-capacity="{{ capacity.capacity_w|default_if_none:'' }}"
      data-max-weight="{{ capacity.max_weight_kg|default_if_none:'' }}">
-    <div class="stat stat-rated" title="PSU 정격 합(1+1 이중화는 PSU 1개 기준) / 랙 전력 용량(피드 × 운영 상한)">
-        정격 <span class="val"></span>{% if capacity.capacity_w %} / {{ capacity.capacity_w|intcomma }}W{% endif %}
+    <div class="stat stat-weight" title="{% trans 'Total device weight against the rack maximum' %}">
+        <div class="stat-label">{% trans "Weight" %}</div>
+        <div class="stat-value"><span class="val">–</span>{% if capacity.max_weight_kg %} <span class="lim">/ {{ capacity.max_weight_kg|intcomma }} kg</span>{% else %} <span class="lim">kg</span>{% endif %}</div>
+        <div class="progress progress-sm"><div class="progress-bar" role="progressbar" style="width: 0%"></div></div>
+        <div class="stat-over" hidden><i class="mdi mdi-alert" aria-hidden="true"></i> <span class="over-by"></span></div>
     </div>
-    <div class="stat stat-peak" title="실측 peak 합 / 랙 전력 용량. 미측정 장비는 합에서 빠지고 대수로 표시">
-        peak <span class="val"></span>{% if capacity.capacity_w %} / {{ capacity.capacity_w|intcomma }}W{% endif %}
+    <div class="stat stat-rated" title="{% trans 'Sum of PSU ratings (a redundant pair counts once) against the usable feed capacity' %}">
+        <div class="stat-label">{% trans "Rated" %}</div>
+        <div class="stat-value"><span class="val">–</span>{% if capacity.capacity_w %} <span class="lim">/ {{ capacity.capacity_w|intcomma }} W</span>{% else %} <span class="lim">W</span>{% endif %}</div>
+        <div class="progress progress-sm"><div class="progress-bar" role="progressbar" style="width: 0%"></div></div>
+        <div class="stat-over" hidden><i class="mdi mdi-alert" aria-hidden="true"></i> <span class="over-by"></span></div>
     </div>
-    <div class="stat stat-weight" title="장비 무게 합 / 랙 허용 하중">
-        무게 <span class="val"></span>{% if capacity.max_weight_kg %} / {{ capacity.max_weight_kg }}kg{% endif %}
-    </div>
+    {% if peak_available %}
+        <div class="stat stat-peak" title="{% trans 'Sum of measured peaks against the usable feed capacity; unmeasured devices are counted, not summed' %}">
+            <div class="stat-label">{% trans "Peak" %}</div>
+            <div class="stat-value"><span class="val">–</span>{% if capacity.capacity_w %} <span class="lim">/ {{ capacity.capacity_w|intcomma }} W</span>{% else %} <span class="lim">W</span>{% endif %}</div>
+            <div class="progress progress-sm"><div class="progress-bar" role="progressbar" style="width: 0%"></div></div>
+            <div class="stat-over" hidden><i class="mdi mdi-alert" aria-hidden="true"></i> <span class="over-by"></span></div>
+            <div class="stat-note text-muted" hidden></div>
+        </div>
+    {% endif %}
 </div>

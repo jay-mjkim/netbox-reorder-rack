@@ -6,7 +6,8 @@ Everything comes from NetBox's own model:
 * PSU:     the device's PowerPorts. Count = number of PSUs, ``maximum_draw`` =
            the PSU rating. Two or more ports are read as redundant (1+1), so the
            *effective* rating a rack has to feed is one PSU, not the sum.
-* peak:    custom field ``measured_peak_power_w`` on the device (optional). A
+* peak:    a device custom field named by the plugin setting ``peak_power_field``
+           (default ``measured_peak_power_w``), optional. A
            device without it is counted as "unmeasured" rather than as zero, so
            a rack total says how many devices it could not account for.
 * weight:  ``Device.total_weight`` (device type + modules), in kg.
@@ -18,8 +19,22 @@ Everything comes from NetBox's own model:
 from collections import defaultdict
 
 from dcim.models import PowerPort
+from extras.models import CustomField
+from netbox.plugins import get_plugin_config
 
-PEAK_FIELD = "measured_peak_power_w"
+
+def peak_field():
+    return get_plugin_config("netbox_reorder_rack", "peak_power_field")
+
+
+def peak_available():
+    """True when the configured peak custom field exists on dcim.device."""
+    name = peak_field()
+    if not name:
+        return False
+    return CustomField.objects.filter(
+        name=name, object_types__app_label="dcim", object_types__model="device"
+    ).exists()
 
 
 def device_meta_map(devices):
@@ -43,7 +58,7 @@ def device_meta(device, port_draws):
         rated_w = psu_w  # redundant pair: the rack only ever feeds one PSU's worth
     else:
         rated_w = sum(ratings)
-    peak_w = (getattr(device, "cf", None) or {}).get(PEAK_FIELD)
+    peak_w = (getattr(device, "cf", None) or {}).get(peak_field())
     weight_kg = device.total_weight or None
     return {
         "psu_count": psu_count,

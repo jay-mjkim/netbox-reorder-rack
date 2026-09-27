@@ -91,9 +91,9 @@ class ReorderRowViewTest(RowTestMixin, TestCase):
         )
         self.assertHttpStatus(response, 200)
         content = response.content.decode()
-        self.assertIn(f'id="grid-rack-{self.rack1.pk}"', content)
-        self.assertIn(f'id="grid-rack-{self.rack2.pk}"', content)
-        self.assertNotIn(f'id="grid-rack-{self.rack3.pk}"', content)
+        self.assertIn(f'id="grid-front-{self.rack1.pk}"', content)
+        self.assertIn(f'id="grid-front-{self.rack2.pk}"', content)
+        self.assertNotIn(f'id="grid-front-{self.rack3.pk}"', content)
         # The unmounted device sits in the shared bin, tagged with its rack.
         self.assertIn(f'data-rack-id="{self.rack2.pk}"', content)
         self.assertRegex(content, r">\s*Spare\s*<")
@@ -104,11 +104,11 @@ class ReorderRowViewTest(RowTestMixin, TestCase):
             f"/plugins/reorder/row/?location_id={self.location.pk}"
         )
         content = response.content.decode()
-        self.assertIn(f'id="grid-rack-{self.rack1.pk}"', content)
-        self.assertNotIn(f'id="grid-rack-{self.rack3.pk}"', content)
+        self.assertIn(f'id="grid-front-{self.rack1.pk}"', content)
+        self.assertNotIn(f'id="grid-front-{self.rack3.pk}"', content)
 
         response = self.client.get(f"/plugins/reorder/row/?id={self.rack3.pk}")
-        self.assertIn(f'id="grid-rack-{self.rack3.pk}"', response.content.decode())
+        self.assertIn(f'id="grid-front-{self.rack3.pk}"', response.content.decode())
 
     def test_mixed_sites_rejected(self):
         self.grant("view", "change")
@@ -118,7 +118,7 @@ class ReorderRowViewTest(RowTestMixin, TestCase):
         self.assertHttpStatus(response, 200)
         content = response.content.decode()
         self.assertIn("same site", content)
-        self.assertNotIn("grid-rack-", content)
+        self.assertNotIn("grid-front-", content)
 
 
 class ReorderRowAPITest(RowTestMixin, TestCase):
@@ -267,10 +267,12 @@ class CapacityTest(RowTestMixin, TestCase):
         self.assertIn('data-weight="38.8"', content)
         self.assertIn('data-capacity="2640"', content)
         self.assertIn('data-max-weight="1000"', content)
-        self.assertIn("2×1,800W (1+1)", content)
-        # A has no ports/peak: attributes are present but empty, and the 1U item
-        # gets no meta line (only the tooltip).
+        self.assertIn('data-psu="2×1,800W (1+1)"', content)
+        # A has no ports/peak: the attributes are present but empty, which the lanes
+        # draw as "–" rather than 0.
         self.assertIn('data-rated=""', content)
+        self.assertIn('data-lane="peak"', content)
+        self.assertIn('id="lane-toggle-peak"', content)
 
     def test_rack_page_carries_figures(self):
         self.grant("view", "change")

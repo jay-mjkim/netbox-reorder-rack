@@ -1,0 +1,57 @@
+{% load rack %}
+{% load i18n %}
+{# One face of one rack: unit numbers, the draggable grid, and the capacity lanes beside #}
+{# it (weight / PSU rating / measured peak), one cell per device, aligned to the device. #}
+{# The lanes are drawn by JS from the grid items so they follow a drag. Params: rack, #}
+{# units, face, images, labels, unit_width, peak_available. #}
+<div class="reorder-elevation" data-rack-id="{{ rack.id }}" data-face="{{ face }}">
+    <div class="reorder-captions">
+        <span class="cap cap-units">U</span>
+        <span class="cap cap-grid">{{ face|capfirst }}</span>
+        <span class="cap cap-lane lane-weight" title="{% trans 'Device weight' %}">kg</span>
+        <span class="cap cap-lane lane-rated" title="{% trans 'PSU rating; a redundant pair counts as one PSU' %}">W {% trans "rated" %}</span>
+        {% if peak_available %}
+            <span class="cap cap-lane lane-peak" title="{% trans 'Measured peak draw' %}">W peak</span>
+        {% endif %}
+    </div>
+    <div class="rack_front d-flex">
+        <ul class="unit_numbers">
+            {% for unit in rack.units %}
+                {% if unit|rack_unit %}
+                    <li>{{ unit|rack_unit_to_int }}</li>
+                {% else %}
+                    <li></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+        <div class="grid-stack rack reorder-rack-grid"
+             id="grid-{{ face }}-{{ rack.id }}"
+             gs-column="2"
+             gs-max-row="{{ rack.u_height|mul:2 }}"
+             gs-min-row="{{ rack.u_height|mul:2 }}"
+             data-grid-kind="rack"
+             data-grid-id="{% if face == 'front' %}0{% else %}1{% endif %}"
+             data-rack-id="{{ rack.id }}"
+             data-face="{{ face }}"
+             data-desc-units="{{ rack.desc_units|lower }}">
+            {% for unit in units %}
+                {% if unit.device %}
+                    {% if unit.device.face == face %}
+                        {% if face == "front" %}
+                            {% include "netbox_reorder_rack/inc/grid_item.html" with device=unit.device meta=unit.meta height=unit.height gs_y=unit|calculate_u_position:rack item_face=face rack_id=rack.id image=unit.device.device_type.front_image %}
+                        {% else %}
+                            {% include "netbox_reorder_rack/inc/grid_item.html" with device=unit.device meta=unit.meta height=unit.height gs_y=unit|calculate_u_position:rack item_face=face rack_id=rack.id image=unit.device.device_type.rear_image %}
+                        {% endif %}
+                    {% else %}
+                        {% include "netbox_reorder_rack/inc/grid_item.html" with device=unit.device meta=unit.meta height=unit.height gs_y=unit|calculate_u_position:rack item_face="back" rack_id=rack.id image=None %}
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div class="lane lane-weight" data-lane="weight" aria-hidden="true"></div>
+        <div class="lane lane-rated" data-lane="rated" aria-hidden="true"></div>
+        {% if peak_available %}
+            <div class="lane lane-peak" data-lane="peak" aria-hidden="true"></div>
+        {% endif %}
+    </div>
+</div>

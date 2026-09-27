@@ -1,6 +1,8 @@
 // Variable to track whether changes have been made
 import { GridStack } from 'gridstack';
 import { createToast } from './toast';
+import { initLaneToggles } from './stats';
+import { renderLanes } from './stats';
 import { renderStats } from './stats';
 
 var changesMade = false;
@@ -160,8 +162,8 @@ function saveRack(rack_id, desc_units) {
 
 }
 
-let frontGrid = initializeGrid("#grid-front", acceptWidgets);
-let rearGrid = initializeGrid("#grid-rear", acceptWidgets);
+let frontGrid = initializeGrid("#grid-front-" + rackId, acceptWidgets);
+let rearGrid = initializeGrid("#grid-rear-" + rackId, acceptWidgets);
 let nonRackedGrid = initializeGrid("#grid-other", acceptOtherWidgets);
 
 grids = [frontGrid, rearGrid, nonRackedGrid];
@@ -169,9 +171,11 @@ grids = [frontGrid, rearGrid, nonRackedGrid];
 getItems(grids);
 
 function refreshStats() {
+  document.querySelectorAll('.reorder-elevation').forEach(renderLanes);
   var statsEl = document.querySelector('.rack-stats');
   if (statsEl) renderStats(statsEl, [frontGrid.el, rearGrid.el]);
 }
+initLaneToggles(document.getElementById('reorder-rack'));
 refreshStats();
 
 // Attach change event listener to each grid

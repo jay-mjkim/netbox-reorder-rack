@@ -3,7 +3,6 @@
 {% load static %}
 {% load rack %}
 {% load i18n %}
-{% load perms %}
 {% load humanize %}
 {% block head %}
     <link rel="stylesheet"
@@ -37,83 +36,77 @@
         <div class="alert alert-warning" role="alert">{{ error }}</div>
     {% endif %}
     {% if columns %}
-        <div class="row">
-            <div class="d-flex justify-content-between align-items-center btn-list mb-2">
-                <span class="text-muted">
-                    {% blocktrans with count=columns|length %}{{ count }} racks{% endblocktrans %} &middot; {{ face|capfirst }}
-                    <a class="ms-2" href="?{{ request.GET.urlencode }}&amp;face={{ other_face }}"
-                       id="face-toggle">{% blocktrans %}Show {{ other_face }}{% endblocktrans %}</a>
-                </span>
-                <span>
-                    <select class="btn btn-outline-secondary no-ts rack-view" id="view-selector">
-                        <option value="images-and-labels"
-                                {% if selected_view == "images-and-labels" %}selected{% endif %}>
-                            {% trans "Images and Labels" %}
-                        </option>
-                        <option value="images-only"
-                                {% if selected_view == "images-only" %}selected{% endif %}>
-                            {% trans "Images only" %}
-                        </option>
-                        <option value="labels-only"
-                                {% if selected_view == "labels-only" %}selected{% endif %}>
-                            {% trans "Labels only" %}
-                        </option>
-                    </select>
-                    <button class="btn btn-success" id="saveButton" disabled>{% trans "Save" %}</button>
-                </span>
-            </div>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <span class="text-muted">
+                {% blocktrans with count=columns|length %}{{ count }} racks{% endblocktrans %} &middot; {{ face|capfirst }}
+                <a class="ms-2" href="?{{ request.GET.urlencode }}&amp;face={{ other_face }}"
+                   id="face-toggle">{% blocktrans %}Show {{ other_face }}{% endblocktrans %}</a>
+            </span>
+            <span class="d-flex align-items-center gap-2">
+                {% include "netbox_reorder_rack/inc/lane_toggles.html" %}
+                <select class="btn btn-outline-secondary no-ts rack-view" id="view-selector" aria-label="{% trans 'Select rack view' %}">
+                    <option value="images-and-labels"
+                            {% if selected_view == "images-and-labels" %}selected{% endif %}>
+                        {% trans "Images and Labels" %}
+                    </option>
+                    <option value="images-only"
+                            {% if selected_view == "images-only" %}selected{% endif %}>
+                        {% trans "Images only" %}
+                    </option>
+                    <option value="labels-only"
+                            {% if selected_view == "labels-only" %}selected{% endif %}>
+                        {% trans "Labels only" %}
+                    </option>
+                </select>
+                <button class="btn btn-success" id="saveButton" disabled>{% trans "Save" %}</button>
+            </span>
         </div>
-        <div class="reorder-row mt-2">
+        <div class="reorder-row" id="reorder-row">
             {% for column in columns %}
-                <div class="reorder-row-col text-center">
-                    <div class="text-nowrap mb-1">
+                <div class="card reorder-rack-card" id="rack-card-{{ column.rack.id }}" data-rack-id="{{ column.rack.id }}">
+                    <div class="card-header d-block text-center py-2">
                         <strong><a href="{{ column.rack.get_absolute_url }}">{{ column.rack.name }}</a></strong>
+                        <span class="badge bg-danger-lt rack-over-badge ms-1" hidden></span>
+                        {% if column.rack.rack_type %}
+                            <br><small class="text-muted">{{ column.rack.rack_type }}</small>
+                        {% elif column.rack.role %}
+                            <br><small class="text-muted">{{ column.rack.role }}</small>
+                        {% endif %}
                     </div>
-                    {% include "netbox_reorder_rack/inc/rack_stats.html" with rack=column.rack capacity=column.capacity %}
-                    {% include "netbox_reorder_rack/inc/row_elevation.html" with rack=column.rack units=column.units %}
+                    <div class="card-body p-2">
+                        {% include "netbox_reorder_rack/inc/elevation.html" with rack=column.rack units=column.units %}
+                    </div>
+                    <div class="card-footer p-0">
+                        {% include "netbox_reorder_rack/inc/rack_stats.html" with rack=column.rack capacity=column.capacity %}
+                    </div>
                 </div>
             {% endfor %}
-            <div class="reorder-row-col text-center">
-                <div class="text-nowrap mb-2"><strong>{% trans "Non-Racked" %}</strong></div>
-                <div class="d-flex justify-content-center">
-                    <div class="grid-stack rack reorder-other"
-                         id="grid-other"
-                         gs-column="2"
-                         gs-max-row="150"
-                         gs-min-row="60"
-                         data-grid-kind="other">
-                        {% for device in non_racked %}
-                            <div class="grid-stack-item"
-                                 gs-w="2"
-                                 gs-h="{{ device.device_type.u_height|mul:2 }}"
-                                 gs-x="0"
-                                 gs-id="{{ device.id }}"
-                                 data-item-face="none"
-                                 data-rack-id="{{ device.rack_id }}" data-weight="{{ device.meta.weight_kg|default_if_none:'' }}"
-                             data-rated="{{ device.meta.rated_w|default_if_none:'' }}"
-                             data-peak="{{ device.meta.peak_w|default_if_none:'' }}"
-                             title="{{ device|device_name }}&#10;PSU: {{ device.meta.psu_label|default:'-' }}&#10;peak: {% if device.meta.peak_w %}{{ device.meta.peak_w|intcomma }} W{% else %}미측정{% endif %}&#10;무게: {% if device.meta.weight_kg %}{{ device.meta.weight_kg }} kg{% else %}-{% endif %}"
-                                 data-item-color="{{ device.role.color }}"
-                                 data-item-text-color="{% if device.role.color %}{{ device.role.color|text_color }}{% else %}000000{% endif %}"
-                                 data-full-depth="{{ device.device_type.is_full_depth }}"
-                                 gs-locked="{% if not request.user|can_change:device %}true{% else %}{% endif %}"
-                                 gs-no-move="{% if not request.user|can_change:device %}true{% else %}{% endif %}">
-                                {% if device.device_type.front_image and images %}
-                                    <div class="grid-stack-item-content device-image"
-                                         style="background-image: url('{{ device.device_type.front_image.url }}'); background-size: {{ unit_width }}px">
-                                {% else %}
-                                    <div class="grid-stack-item-content"
-                                         style="background-color: #{{ device.role.color }}; color: #{% if device.role.color %}{{ device.role.color|text_color }}{% else %}000000{% endif %}">
-                                {% endif %}
-                                    <a class="device-link" href="{{ device.get_absolute_url }}" title="{{ device|device_name }}">
-                                        {% if labels or not device.device_type.front_image %}{{ device|device_name }}{% else %}<i class="mdi mdi-open-in-new"></i>{% endif %}
-                                    </a>
-                                </div>
-                            </div>
-                        {% endfor %}
+            <div class="card reorder-rack-card reorder-bin-card">
+                <div class="card-header d-block text-center py-2">
+                    <strong>{% trans "Non-Racked" %}</strong>
+                </div>
+                <div class="card-body p-2">
+                    <div class="reorder-captions"><span class="cap cap-grid">&nbsp;</span></div>
+                    <div class="d-flex justify-content-center">
+                        <div class="grid-stack rack reorder-other"
+                             id="grid-other"
+                             gs-column="2"
+                             gs-max-row="150"
+                             gs-min-row="60"
+                             data-grid-kind="other">
+                            {% for device in non_racked %}
+                                {% include "netbox_reorder_rack/inc/grid_item.html" with device=device meta=device.meta height=device.device_type.u_height gs_y=None item_face="none" rack_id=device.rack_id image=device.device_type.front_image %}
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="text-muted small mt-2 reorder-legend">
+            <span class="me-3"><span class="legend-swatch bg-success"></span> ≤ 80%</span>
+            <span class="me-3"><span class="legend-swatch bg-warning"></span> 80–100%</span>
+            <span class="me-3"><span class="legend-swatch bg-danger"></span> {% trans "over the rack limit" %}</span>
+            <span>{% trans "Rated: a redundant PSU pair counts as one PSU. Peak: devices without a measurement are counted, not summed." %}</span>
         </div>
     {% endif %}
 {% endblock content %}

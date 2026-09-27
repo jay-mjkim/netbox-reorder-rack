@@ -1,0 +1,12 @@
+{% load i18n %}
+{# Which capacity lanes to show. Checked state is kept in the browser (localStorage). #}
+<div class="btn-group lane-toggles" role="group" aria-label="{% trans 'Capacity columns' %}">
+    <input type="checkbox" class="btn-check" id="lane-toggle-weight" data-lane="weight" checked autocomplete="off">
+    <label class="btn btn-outline-secondary btn-sm" for="lane-toggle-weight">{% trans "Weight" %}</label>
+    <input type="checkbox" class="btn-check" id="lane-toggle-rated" data-lane="rated" checked autocomplete="off">
+    <label class="btn btn-outline-secondary btn-sm" for="lane-toggle-rated">{% trans "Rated power" %}</label>
+    {% if peak_available %}
+        <input type="checkbox" class="btn-check" id="lane-toggle-peak" data-lane="peak" checked autocomplete="off">
+        <label class="btn btn-outline-secondary btn-sm" for="lane-toggle-peak">{% trans "Peak power" %}</label>
+    {% endif %}
+</div>

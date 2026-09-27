@@ -2,6 +2,8 @@
 // the shared non-racked bin. One save carries every device to its new rack/unit.
 import { GridStack } from 'gridstack';
 import { createToast } from './toast';
+import { initLaneToggles } from './stats';
+import { renderLanes } from './stats';
 import { renderStats } from './stats';
 
 var changesMade = false;
@@ -98,11 +100,13 @@ document.querySelectorAll('.grid-stack').forEach(function (el) {
 });
 
 function refreshStats() {
+  document.querySelectorAll('.reorder-elevation').forEach(renderLanes);
   document.querySelectorAll('.rack-stats').forEach(function (statsEl) {
-    var grid = document.getElementById('grid-rack-' + statsEl.getAttribute('data-rack-id'));
+    var grid = document.getElementById('grid-' + rowFace + '-' + statsEl.getAttribute('data-rack-id'));
     if (grid) renderStats(statsEl, [grid]);
   });
 }
+initLaneToggles(document.getElementById('reorder-row'));
 refreshStats();
 
 grids.forEach(function (grid) {
