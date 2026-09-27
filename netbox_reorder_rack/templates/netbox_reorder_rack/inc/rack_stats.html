@@ -1,0 +1,32 @@
+{% load humanize %}
+{% load i18n %}
+{# Totals for one rack against its limits. The server renders the limits; JS fills the #}
+{# sums, the bars and the "over by" line from the items on screen, and refreshes them on #}
+{# every drag. Params: rack, capacity (from capacity.rack_capacity), peak_available. #}
+<div class="rack-stats"
+     id="rack-stats-{{ rack.id }}"
+     data-rack-id="{{ rack.id }}"
+     data-capacity="{{ capacity.capacity_w|default_if_none:'' }}"
+     data-max-weight="{{ capacity.max_weight_kg|default_if_none:'' }}">
+    <div class="stat stat-weight" title="{% trans 'Total device weight against the rack maximum' %}">
+        <div class="stat-label">{% trans "Weight" %}</div>
+        <div class="stat-value"><span class="val">–</span>{% if capacity.max_weight_kg %} <span class="lim">/ {{ capacity.max_weight_kg|intcomma }} kg</span>{% else %} <span class="lim">kg</span>{% endif %}</div>
+        <div class="progress progress-sm"><div class="progress-bar" role="progressbar" style="width: 0%"></div></div>
+        <div class="stat-over" hidden><i class="mdi mdi-alert" aria-hidden="true"></i> <span class="over-by"></span></div>
+    </div>
+    <div class="stat stat-rated" title="{% trans 'Sum of PSU ratings (a redundant pair counts once) against the usable feed capacity' %}">
+        <div class="stat-label">{% trans "Rated" %}</div>
+        <div class="stat-value"><span class="val">–</span>{% if capacity.capacity_w %} <span class="lim">/ {{ capacity.capacity_w|intcomma }} W</span>{% else %} <span class="lim">W</span>{% endif %}</div>
+        <div class="progress progress-sm"><div class="progress-bar" role="progressbar" style="width: 0%"></div></div>
+        <div class="stat-over" hidden><i class="mdi mdi-alert" aria-hidden="true"></i> <span class="over-by"></span></div>
+    </div>
+    {% if peak_available %}
+        <div class="stat stat-peak" title="{% trans 'Sum of measured peaks against the usable feed capacity; unmeasured devices are counted, not summed' %}">
+            <div class="stat-label">{% trans "Peak" %}</div>
+            <div class="stat-value"><span class="val">–</span>{% if capacity.capacity_w %} <span class="lim">/ {{ capacity.capacity_w|intcomma }} W</span>{% else %} <span class="lim">W</span>{% endif %}</div>
+            <div class="progress progress-sm"><div class="progress-bar" role="progressbar" style="width: 0%"></div></div>
+            <div class="stat-over" hidden><i class="mdi mdi-alert" aria-hidden="true"></i> <span class="over-by"></span></div>
+            <div class="stat-note text-muted" hidden></div>
+        </div>
+    {% endif %}
+</div>

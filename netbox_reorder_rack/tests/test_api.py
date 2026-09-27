@@ -137,7 +137,7 @@ class ReorderRackAPITest(TestCase):
             data,
             content_type="application/json",
         )
-        self.assertHttpStatus(resp, 500)
+        self.assertHttpStatus(resp, 403)
 
     def test_reorder_rack_view_with_permissions(self):
         # Add model-level permission

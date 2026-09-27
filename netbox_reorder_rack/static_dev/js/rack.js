@@ -1,92 +1,13 @@
 // Variable to track whether changes have been made
 import { GridStack } from 'gridstack';
-import { Toast } from 'bootstrap';
+import { createToast } from './toast';
+import { initLaneToggles } from './stats';
+import { renderLanes } from './stats';
+import { renderStats } from './stats';
 
 var changesMade = false;
 var gridItemsMap = [];
 var grids = [];
-
-function createToast(level, title, message, extra) {
-  // Set the icon based on the toast level
-  let iconName = 'mdi-alert';  // default icon
-  switch (level) {
-    case 'warning':
-      iconName = 'mdi-alert';
-      break;
-    case 'success':
-      iconName = 'mdi-check-circle';
-      break;
-    case 'info':
-      iconName = 'mdi-information';
-      break;
-    case 'danger':
-      iconName = 'mdi-alert';
-      break;
-  }
-
-  // Create the container for the toast
-  const container = document.createElement('div');
-  container.setAttribute('class', 'toast-container position-fixed bottom-0 end-0 m-3');
-
-  // Create the main toast element
-  const main = document.createElement('div');
-  main.setAttribute('class', `toast`);
-  main.setAttribute('role', 'alert');
-  main.setAttribute('aria-live', 'assertive');
-  main.setAttribute('aria-atomic', 'true');
-
-  // Create the toast header
-  const header = document.createElement('div');
-  header.setAttribute('class', `toast-header bg-${level} text-dark`);
-
-  // Add the icon to the header
-  const icon = document.createElement('i');
-  icon.setAttribute('class', `mdi ${iconName}`);
-
-  // Add the title to the header
-  const titleElement = document.createElement('strong');
-  titleElement.setAttribute('class', 'me-auto ms-1');
-  titleElement.innerText = title;
-
-  // Add the close button to the header
-  const button = document.createElement('button');
-  button.setAttribute('type', 'button');
-  button.setAttribute('class', 'btn-close');
-  button.setAttribute('data-bs-dismiss', 'toast');
-  button.setAttribute('aria-label', 'Close');
-
-  // Create the toast body
-  const body = document.createElement('div');
-  body.setAttribute('class', 'toast-body text-dark');
-  body.innerText = message.trim();
-
-  // Assemble the header
-  header.appendChild(icon);
-  header.appendChild(titleElement);
-
-  // If extra info is provided, add it to the header
-  if (typeof extra !== 'undefined') {
-    const extraElement = document.createElement('small');
-    extraElement.setAttribute('class', 'text-dark');
-    extraElement.innerText = extra;
-    header.appendChild(extraElement);
-  }
-
-  // Add the close button to the header
-  header.appendChild(button);
-
-  // Assemble the main toast
-  main.appendChild(header);
-  main.appendChild(body);
-  container.appendChild(main);
-
-  // Add the toast container to the body
-  document.body.appendChild(container);
-
-  // Initialize the Bootstrap toast
-  const toast = new Toast(main);
-  return toast;
-}
 
 // Function to get the items from the grids
 function getItems(grids) {
@@ -129,6 +50,8 @@ function initializeGrid(element, acceptWidgets) {
     animate: true,
     removeTimeout: 100,
     disableResize: true,
+    // A click on the device link navigates instead of starting a drag.
+    draggable: { handle: '.grid-stack-item-content', cancel: '.device-link' },
     acceptWidgets: acceptWidgets,
   }, element);
 }
@@ -239,19 +162,28 @@ function saveRack(rack_id, desc_units) {
 
 }
 
-let frontGrid = initializeGrid("#grid-front", acceptWidgets);
-let rearGrid = initializeGrid("#grid-rear", acceptWidgets);
+let frontGrid = initializeGrid("#grid-front-" + rackId, acceptWidgets);
+let rearGrid = initializeGrid("#grid-rear-" + rackId, acceptWidgets);
 let nonRackedGrid = initializeGrid("#grid-other", acceptOtherWidgets);
 
 grids = [frontGrid, rearGrid, nonRackedGrid];
 // Get the items from the grids
 getItems(grids);
 
+function refreshStats() {
+  document.querySelectorAll('.reorder-elevation').forEach(renderLanes);
+  var statsEl = document.querySelector('.rack-stats');
+  if (statsEl) renderStats(statsEl, [frontGrid.el, rearGrid.el]);
+}
+initLaneToggles(document.getElementById('reorder-rack'), refreshStats);
+refreshStats();
+
 // Attach change event listener to each grid
 grids.forEach(function (grid, gridIndex) {
   grid.on('change', function (event, items) {
     // Set changesMade to true when a change occurs
     changesMade = true;
+    refreshStats();
 
     // Select the button element by its ID or any other selector
     var button = document.getElementById('saveButton');
@@ -278,6 +210,7 @@ grids.forEach(function (grid, gridIndex) {
   grid.on('dropped', function (event, previousWidget, newWidget) {
     // Set changesMade to true when a change occurs
     changesMade = true;
+    setTimeout(refreshStats, 0);
 
     // Select the button element by its ID or any other selector
     var button = document.getElementById('saveButton');

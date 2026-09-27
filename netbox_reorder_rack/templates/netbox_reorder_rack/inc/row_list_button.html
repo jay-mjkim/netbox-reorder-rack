@@ -1,0 +1,7 @@
+{% if perms.dcim.change_device %}
+    <a href="{% url 'plugins:netbox_reorder_rack:row' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}"
+       class="btn btn-info"
+       role="button">
+        <i class="mdi mdi-sort" aria-hidden="true"></i> Reorder Racks
+    </a>
+{% endif %}

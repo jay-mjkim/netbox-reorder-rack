@@ -49,9 +49,221 @@ ul.unit_numbers li {
 .grid-stack-item>.grid-stack-item-content {
     border: 1px solid var(--nbx-rack-slot-border);
     border-radius: 3px;
+    /* gridstack's default is overflow-y: auto, which on a 1U item put a scrollbar (with
+       its arrow buttons) beside the name; the name is centred and clipped instead. */
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 4px;
+    box-sizing: border-box;
+}
+
+.grid-stack-item-content .device-link {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
 }
 
 .grid-stack-placeholder>.placeholder-content {
     border: 1px dashed #8a8a8a;
     background-color: #f3f3f329;
+}
+
+/* Row view: rack columns side by side, page scrolls sideways past the viewport. */
+.reorder-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+}
+
+.reorder-row-col {
+    flex: 0 0 auto;
+}
+
+/* Device name inside a grid item doubles as the link to the device. */
+.grid-stack-item-content .device-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.grid-stack-item-content .device-link:hover {
+    text-decoration: underline;
+}
+
+/* Image-backed item: white label with a dark outline, like the core elevation SVG
+   (which draws the name twice: black stroke underneath, white fill on top). */
+.grid-stack-item-content.device-image {
+    color: #fff;
+    font-weight: 600;
+    text-shadow:
+        -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000,
+        0 0 3px #000, 0 0 3px #000;
+}
+
+/* ── Capacity lanes and totals ─────────────────────────────────────────────── */
+
+/* A rack is a card; the elevation sits in its body, the totals in its footer. */
+.reorder-rack-card {
+    flex: 0 0 auto;
+}
+
+.reorder-rack-card.over-limit {
+    border-color: var(--tblr-danger);
+}
+
+.reorder-rack-card .card-header strong a {
+    text-decoration: none;
+}
+
+/* The elevation is a row of columns; every column is a caption over its content, so the
+   captions line up with the columns by construction. */
+.reorder-elevation {
+    display: flex;
+    align-items: flex-start;
+    margin: 0 auto;            /* centred in the card when the lanes are hidden */
+    width: max-content;
+}
+
+.reorder-col {
+    flex: 0 0 auto;
+}
+
+.reorder-col .cap {
+    height: 1.4rem;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: var(--tblr-secondary);
+    white-space: nowrap;
+}
+
+.reorder-col-units .unit_numbers {
+    float: none;
+    margin: 0;
+    padding: 0;
+}
+
+.reorder-col-grid .rack {
+    float: none;
+}
+
+.lane-col {
+    width: 56px;
+}
+
+.lane-col .cap {
+    justify-content: center;
+}
+
+.reorder-col-grid + .lane-col {
+    margin-left: 4px;
+}
+
+/* One lane: a column of cells aligned to the devices in the grid beside it. */
+.lane {
+    position: relative;
+    width: 56px;
+    background: var(--tblr-bg-surface-secondary);
+    border-radius: 3px;
+    box-sizing: border-box;
+}
+
+.lane-col + .lane-col .lane {
+    border-left: 1px solid var(--tblr-border-color);
+}
+
+.lane-cell {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 6px;
+    box-sizing: border-box;
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--tblr-body-color);
+    background: var(--tblr-bg-surface);
+    border-bottom: 1px solid var(--tblr-border-color);
+}
+
+.lane-cell.empty {
+    color: var(--tblr-secondary);
+    font-style: italic;
+}
+
+/* A lane toggle hides the lane, its caption and the matching footer stat together. */
+.hide-lane-weight .lane-weight, .hide-lane-weight .stat-weight,
+.hide-lane-rated  .lane-rated,  .hide-lane-rated  .stat-rated,
+.hide-lane-peak   .lane-peak,   .hide-lane-peak   .stat-peak { display: none; }
+
+/* Totals under the elevation. */
+.rack-stats {
+    display: flex;
+    font-size: 0.75rem;
+}
+
+.rack-stats .stat {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.4rem 0.6rem 0.45rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.rack-stats .stat + .stat {
+    border-left: 1px solid var(--tblr-border-color);
+}
+
+.rack-stats .progress {
+    height: 3px;
+}
+
+.rack-stats .stat-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--tblr-secondary);
+}
+
+.rack-stats .stat-value {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.rack-stats .stat-value .lim {
+    font-weight: 400;
+    color: var(--tblr-secondary);
+}
+
+.rack-stats .stat.warn .stat-value .val { color: var(--tblr-warning); }
+.rack-stats .stat.over .stat-value .val { color: var(--tblr-danger); }
+
+.rack-stats .stat-over {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--tblr-danger);
+}
+
+.rack-stats .stat-note {
+    font-size: 0.68rem;
+}
+
+.reorder-legend .legend-swatch {
+    display: inline-block;
+    width: 10px;
+    height: 5px;
+    border-radius: 3px;
+    vertical-align: middle;
+    margin-right: 4px;
 }

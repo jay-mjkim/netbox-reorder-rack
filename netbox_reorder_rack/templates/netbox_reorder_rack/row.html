@@ -1,0 +1,122 @@
+{% extends "base/layout.html" %}
+{% load form_helpers %}
+{% load static %}
+{% load rack %}
+{% load i18n %}
+{% load humanize %}
+{% block head %}
+    <link rel="stylesheet"
+          href="{% static_v 'netbox_reorder_rack/css/rack.css' %}">
+{% endblock head %}
+{% block title %}
+    {% trans "Reorder Racks" %}
+{% endblock title %}
+{% block content %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <form method="get" class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">{% render_field form.site_id %}</div>
+                        <div class="col-md-3">{% render_field form.location_id %}</div>
+                        <div class="col-md-4">{% render_field form.rack_id %}</div>
+                        <div class="col-md-2">{% render_field form.face %}</div>
+                    </div>
+                    <input type="hidden" name="view" value="{{ selected_view }}">
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="mdi mdi-view-column" aria-hidden="true"></i> {% trans "Show" %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% if error %}
+        <div class="alert alert-warning" role="alert">{{ error }}</div>
+    {% endif %}
+    {% if columns %}
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <span class="text-muted">
+                {% blocktrans with count=columns|length %}{{ count }} racks{% endblocktrans %} &middot; {{ face|capfirst }}
+                <a class="ms-2" href="?{{ request.GET.urlencode }}&amp;face={{ other_face }}"
+                   id="face-toggle">{% blocktrans %}Show {{ other_face }}{% endblocktrans %}</a>
+            </span>
+            <span class="d-flex align-items-center gap-2">
+                {% include "netbox_reorder_rack/inc/lane_toggles.html" %}
+                <select class="btn btn-outline-secondary no-ts rack-view" id="view-selector" aria-label="{% trans 'Select rack view' %}">
+                    <option value="images-and-labels"
+                            {% if selected_view == "images-and-labels" %}selected{% endif %}>
+                        {% trans "Images and Labels" %}
+                    </option>
+                    <option value="images-only"
+                            {% if selected_view == "images-only" %}selected{% endif %}>
+                        {% trans "Images only" %}
+                    </option>
+                    <option value="labels-only"
+                            {% if selected_view == "labels-only" %}selected{% endif %}>
+                        {% trans "Labels only" %}
+                    </option>
+                </select>
+                <button class="btn btn-success" id="saveButton" disabled>{% trans "Save" %}</button>
+            </span>
+        </div>
+        <div class="reorder-row" id="reorder-row">
+            {% for column in columns %}
+                <div class="card reorder-rack-card" id="rack-card-{{ column.rack.id }}" data-rack-id="{{ column.rack.id }}">
+                    <div class="card-header d-block text-center py-2">
+                        <strong><a href="{{ column.rack.get_absolute_url }}">{{ column.rack.name }}</a></strong>
+                        <span class="badge bg-danger-lt rack-over-badge ms-1" hidden></span>
+                        {% if column.rack.rack_type %}
+                            <br><small class="text-muted">{{ column.rack.rack_type }}</small>
+                        {% elif column.rack.role %}
+                            <br><small class="text-muted">{{ column.rack.role }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="card-body p-2">
+                        {% include "netbox_reorder_rack/inc/elevation.html" with rack=column.rack units=column.units %}
+                    </div>
+                    <div class="card-footer p-0">
+                        {% include "netbox_reorder_rack/inc/rack_stats.html" with rack=column.rack capacity=column.capacity %}
+                    </div>
+                </div>
+            {% endfor %}
+            <div class="card reorder-rack-card reorder-bin-card">
+                <div class="card-header d-block text-center py-2">
+                    <strong>{% trans "Non-Racked" %}</strong>
+                </div>
+                <div class="card-body p-2">
+                    <div class="reorder-captions"><span class="cap cap-grid">&nbsp;</span></div>
+                    <div class="d-flex justify-content-center">
+                        <div class="grid-stack rack reorder-other"
+                             id="grid-other"
+                             gs-column="2"
+                             gs-max-row="150"
+                             gs-min-row="60"
+                             data-grid-kind="other">
+                            {% for device in non_racked %}
+                                {% include "netbox_reorder_rack/inc/grid_item.html" with device=device meta=device.meta height=device.device_type.u_height gs_y=None item_face="none" rack_id=device.rack_id image=device.device_type.front_image %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-muted small mt-2 reorder-legend">
+            <span class="me-3"><span class="legend-swatch bg-success"></span> ≤ 80%</span>
+            <span class="me-3"><span class="legend-swatch bg-warning"></span> 80–100%</span>
+            <span class="me-3"><span class="legend-swatch bg-danger"></span> {% trans "over the rack limit" %}</span>
+            <span>{% trans "Rated: a redundant PSU pair counts as one PSU. Peak: devices without a measurement are counted, not summed." %}</span>
+        </div>
+    {% endif %}
+{% endblock content %}
+{% block javascript %}
+    {% if columns %}
+        <script type="text/javascript">
+      const basePath = '{{ basepath }}';
+      const netbox_csrf_token = '{{ csrf_token }}';
+      const rowFace = '{{ face }}';
+        </script>
+        <script src="{% static_v 'netbox_reorder_rack/js/row.js' %}" defer></script>
+    {% endif %}
+{% endblock javascript %}
