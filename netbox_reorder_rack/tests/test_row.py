@@ -36,8 +36,12 @@ class RowTestMixin:
         cls.two_u = DeviceType.objects.create(
             manufacturer=manufacturer, model="2U", slug="2u", u_height=2
         )
+        cls.zero_u = DeviceType.objects.create(
+            manufacturer=manufacturer, model="PDU", slug="pdu", u_height=0
+        )
         specs = [
             ("A", cls.one_u, cls.rack1, 1),
+            ("Strip", cls.zero_u, cls.rack2, None),
             ("B", cls.two_u, cls.rack1, 5),
             ("C", cls.one_u, cls.rack2, 1),
             ("Spare", cls.one_u, cls.rack2, None),
@@ -97,6 +101,8 @@ class ReorderRowViewTest(RowTestMixin, TestCase):
         # The unmounted device sits in the shared bin, tagged with its rack.
         self.assertIn(f'data-rack-id="{self.rack2.pk}"', content)
         self.assertRegex(content, r">\s*Spare\s*<")
+        # A 0U device (PDU strip) assigned to the rack is not offered in the bin.
+        self.assertNotIn('data-name="Strip"', content)
 
     def test_location_filter_and_list_passthrough_id(self):
         self.grant("view", "change")

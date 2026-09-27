@@ -63,9 +63,11 @@ class ReorderView(LoginRequiredMixin, PermissionRequiredMixin, View):
             images = False
             labels = True
 
+        # A 0U type (PDU strip, cable manager) is never mounted in a unit, so it
+        # has no place on the grid or in the bin.
         non_racked = Device.objects.filter(
             rack=rack, position__isnull=True, parent_bay__isnull=True
-        )
+        ).exclude(device_type__u_height=0)
 
         exclude_list = []
         # fix - exclude all child devices:
@@ -175,6 +177,7 @@ class ReorderRowView(LoginRequiredMixin, PermissionRequiredMixin, View):
                 parent_bay__isnull=True,
             )
             .exclude(device_type__subdevice_role="child")
+            .exclude(device_type__u_height=0)  # 0U types (PDU strips) never mount
             .select_related("device_type", "role", "rack")
             # device_name (dcim.svg.racks.get_device_name) reads this annotation,
             # which get_rack_units adds for mounted devices but nothing adds here.
