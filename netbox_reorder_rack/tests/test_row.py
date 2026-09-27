@@ -239,6 +239,17 @@ class CapacityTest(RowTestMixin, TestCase):
             phase="single-phase",
             max_utilization=80,
         )
+        # The B side of an A/B pair: same size, marked redundant, adds no capacity.
+        PowerFeed.objects.create(
+            power_panel=panel,
+            rack=cls.rack1,
+            name="R1-B",
+            type="redundant",
+            voltage=220,
+            amperage=15,
+            phase="single-phase",
+            max_utilization=80,
+        )
 
     def test_meta_helpers(self):
         from netbox_reorder_rack.capacity import device_meta_map

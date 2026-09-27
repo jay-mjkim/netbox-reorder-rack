@@ -195,7 +195,7 @@ ul.unit_numbers li {
     border-bottom: 1px solid var(--tblr-border-color);
 }
 
-.lane-cell.empty {
+.lane-cell.lane-cell-none {
     color: var(--tblr-secondary);
     font-style: italic;
 }

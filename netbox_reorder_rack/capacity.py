@@ -11,13 +11,15 @@ Everything comes from NetBox's own model:
            device without it is counted as "unmeasured" rather than as zero, so
            a rack total says how many devices it could not account for.
 * weight:  ``Device.total_weight`` (device type + modules), in kg.
-* rack:    capacity = sum of its PowerFeeds' ``available_power`` (NetBox already
-           derates that by the feed's ``max_utilization``); weight limit =
-           ``Rack.max_weight``.
+* rack:    capacity = sum of its *primary* PowerFeeds' ``available_power``
+           (NetBox already derates that by the feed's ``max_utilization``). A
+           feed of type "redundant" is the B side of an A/B pair and does not
+           add capacity. Weight limit = ``Rack.max_weight``.
 """
 
 from collections import defaultdict
 
+from dcim.choices import PowerFeedTypeChoices
 from dcim.models import PowerPort
 from extras.models import CustomField
 from netbox.plugins import get_plugin_config
@@ -80,8 +82,12 @@ def _psu_label(count, watts):
 
 
 def rack_capacity(rack):
-    """Usable power (W) from the rack's feeds, and its weight limit (kg)."""
-    capacity_w = sum(feed.available_power or 0 for feed in rack.powerfeeds.all())
+    """Usable power (W) from the rack's primary feeds, and its weight limit (kg)."""
+    capacity_w = sum(
+        feed.available_power or 0
+        for feed in rack.powerfeeds.all()
+        if feed.type != PowerFeedTypeChoices.TYPE_REDUNDANT
+    )
     max_weight_kg = None
     if rack._abs_max_weight:
         max_weight_kg = round(rack._abs_max_weight / 1000, 2)

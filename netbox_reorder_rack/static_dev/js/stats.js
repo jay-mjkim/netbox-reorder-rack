@@ -37,7 +37,7 @@ export function renderLanes(elevationEl) {
       cell.style.height = item.offsetHeight + 'px';
       var text = laneText(item, key);
       if (text === null) {
-        cell.classList.add('empty');
+        cell.classList.add('lane-cell-none');   // not 'empty': that is Tabler's empty-state component
         cell.textContent = '–';
         cell.title = key === 'peak' ? 'not measured' : 'unknown';
       } else {
