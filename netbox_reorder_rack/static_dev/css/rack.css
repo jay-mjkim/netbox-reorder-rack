@@ -49,6 +49,22 @@ ul.unit_numbers li {
 .grid-stack-item>.grid-stack-item-content {
     border: 1px solid var(--nbx-rack-slot-border);
     border-radius: 3px;
+    /* gridstack's default is overflow-y: auto, which on a 1U item put a scrollbar (with
+       its arrow buttons) beside the name; the name is centred and clipped instead. */
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 4px;
+    box-sizing: border-box;
+}
+
+.grid-stack-item-content .device-link {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
 }
 
 .grid-stack-placeholder>.placeholder-content {
@@ -143,9 +159,7 @@ ul.unit_numbers li {
 }
 
 .lane-col .cap {
-    justify-content: flex-end;
-    padding-right: 6px;
-    box-sizing: border-box;
+    justify-content: center;
 }
 
 .reorder-col-grid + .lane-col {
