@@ -200,10 +200,16 @@ ul.unit_numbers li {
     font-style: italic;
 }
 
-/* A lane toggle hides the lane, its caption and the matching footer stat together. */
-.hide-lane-weight .lane-weight, .hide-lane-weight .stat-weight,
-.hide-lane-rated  .lane-rated,  .hide-lane-rated  .stat-rated,
-.hide-lane-peak   .lane-peak,   .hide-lane-peak   .stat-peak { display: none; }
+/* A lane toggle hides the lane, its caption and the matching footer stat together.
+   (.rack-stats .stat sets display: flex at the same specificity, so the stat rule
+   needs the extra ancestor to win.) */
+.hide-lane-weight .lane-weight,
+.hide-lane-rated  .lane-rated,
+.hide-lane-peak   .lane-peak { display: none; }
+
+.hide-lane-weight .rack-stats .stat-weight,
+.hide-lane-rated  .rack-stats .stat-rated,
+.hide-lane-peak   .rack-stats .stat-peak { display: none; }
 
 /* Totals under the elevation. */
 .rack-stats {
