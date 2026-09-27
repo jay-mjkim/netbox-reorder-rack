@@ -110,7 +110,7 @@ grids.forEach(function (grid) {
       // Dropped into the non-racked bin: stays assigned to the rack it came from.
       el.setAttribute('data-item-face', 'none');
     }
-    if (content && !content.style.backgroundImage) {
+    if (content && !content.classList.contains('device-image')) {
       content.style.backgroundColor = '#' + el.getAttribute('data-item-color');
       content.style.color = '#' + el.getAttribute('data-item-text-color');
     }

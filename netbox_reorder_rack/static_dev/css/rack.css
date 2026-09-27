@@ -78,3 +78,13 @@ ul.unit_numbers li {
 .grid-stack-item-content .device-link:hover {
     text-decoration: underline;
 }
+
+/* Image-backed item: white label with a dark outline, like the core elevation SVG
+   (which draws the name twice: black stroke underneath, white fill on top). */
+.grid-stack-item-content.device-image {
+    color: #fff;
+    font-weight: 600;
+    text-shadow:
+        -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000,
+        0 0 3px #000, 0 0 3px #000;
+}

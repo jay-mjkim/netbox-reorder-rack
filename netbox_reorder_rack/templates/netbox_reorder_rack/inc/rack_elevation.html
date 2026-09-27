@@ -33,10 +33,8 @@
                              data-full-depth="{{ device.device.device_type.is_full_depth }}"
                              data-item-face="{{ face }}">
                             {% if device.device.device_type.front_image and images %}
-                                <div class="grid-stack-item-content"
-                                     style="background-image: url('{{ device.device.device_type.front_image.url }}');
-                                            background-size: {{ unit_width }}px;
-                                            color: #{% if device.device.role.color %}{{ device.device.role.color|text_color }}{% else %}000000{% endif %}">
+                                <div class="grid-stack-item-content device-image"
+                                     style="background-image: url('{{ device.device.device_type.front_image.url }}'); background-size: {{ unit_width }}px">
                                     <a class="device-link" href="{{ device.device.get_absolute_url }}" title="{{ device.device|device_name }}">{% if labels %}{{ device.device|device_name }}{% else %}<i class="mdi mdi-open-in-new"></i>{% endif %}</a>
                                 </div>
                             {% else %}
@@ -62,10 +60,8 @@
                              gs-locked="{% if not request.user|can_change:device.device %}true{% else %}{% endif %}"
                              gs-no-move="{% if not request.user|can_change:device.device %}true{% else %}{% endif %}">
                             {% if device.device.device_type.rear_image and images %}
-                                <div class="grid-stack-item-content device_rear"
-                                     style="background-image: url('{{ device.device.device_type.rear_image.url }}');
-                                            background-size: {{ unit_width }}px;
-                                            color: #{% if device.device.role.color %}{{ device.device.role.color|text_color }}{% else %}000000{% endif %}">
+                                <div class="grid-stack-item-content device-image device_rear"
+                                     style="background-image: url('{{ device.device.device_type.rear_image.url }}'); background-size: {{ unit_width }}px">
                                     <a class="device-link" href="{{ device.device.get_absolute_url }}" title="{{ device.device|device_name }}">{% if labels %}{{ device.device|device_name }}{% else %}<i class="mdi mdi-open-in-new"></i>{% endif %}</a>
                                 </div>
                             {% else %}
