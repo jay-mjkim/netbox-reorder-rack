@@ -8,7 +8,7 @@
 {% load humanize %}
 {% block head %}
     <link rel="stylesheet"
-          href="{% static 'netbox_reorder_rack/css/rack.css' %}">
+          href="{% static_v 'netbox_reorder_rack/css/rack.css' %}">
 {% endblock head %}
 {% block header %}
     <div class="d-flex justify-content-between align-items-center">
@@ -130,5 +130,5 @@
   const rackId = {{ object.id }};
   const descUnits = {{ object.desc_units | lower }};
     </script>
-    <script src="{% static 'netbox_reorder_rack/js/rack.js' %}" defer></script>
+    <script src="{% static_v 'netbox_reorder_rack/js/rack.js' %}" defer></script>
 {% endblock javascript %}

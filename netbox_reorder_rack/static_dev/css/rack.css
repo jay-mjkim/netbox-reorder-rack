@@ -118,6 +118,7 @@ ul.unit_numbers li {
 .reorder-captions .cap-units { width: 20px; }
 .reorder-captions .cap-grid  { width: 217px; text-align: center; }
 .reorder-captions .cap-lane  { width: 56px; text-align: right; padding-right: 6px; box-sizing: border-box; }
+.reorder-captions .cap-grid + .cap-lane { margin-left: 4px; }
 
 /* One lane: a column of cells aligned to the devices in the grid beside it. */
 .lane {

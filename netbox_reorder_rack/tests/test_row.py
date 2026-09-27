@@ -273,6 +273,9 @@ class CapacityTest(RowTestMixin, TestCase):
         self.assertIn('data-rated=""', content)
         self.assertIn('data-lane="peak"', content)
         self.assertIn('id="lane-toggle-peak"', content)
+        # Plugin static URLs carry a content hash so a rebuilt bundle is not served
+        # from the browser cache after an upgrade.
+        self.assertRegex(content, r"netbox_reorder_rack/js/row\.js\?v=[0-9a-f]{10}")
 
     def test_rack_page_carries_figures(self):
         self.grant("view", "change")

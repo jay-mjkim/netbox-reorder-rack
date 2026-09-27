@@ -6,7 +6,7 @@
 {% load humanize %}
 {% block head %}
     <link rel="stylesheet"
-          href="{% static 'netbox_reorder_rack/css/rack.css' %}">
+          href="{% static_v 'netbox_reorder_rack/css/rack.css' %}">
 {% endblock head %}
 {% block title %}
     {% trans "Reorder Racks" %}
@@ -117,6 +117,6 @@
       const netbox_csrf_token = '{{ csrf_token }}';
       const rowFace = '{{ face }}';
         </script>
-        <script src="{% static 'netbox_reorder_rack/js/row.js' %}" defer></script>
+        <script src="{% static_v 'netbox_reorder_rack/js/row.js' %}" defer></script>
     {% endif %}
 {% endblock javascript %}
